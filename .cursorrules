@@ -1,0 +1,205 @@
+{
+    "projectName": "frutas-prohibidas-mvp",
+    "ignorePatterns": [
+      "node_modules",
+      "dist",
+      "build",
+      ".git",
+      "*.log"
+    ],
+    "formatOnSave": true,
+    "defaultFormatter": "prettier",
+    "lintOnSave": true,
+    "cursorRules": {
+      "askForConfirmation": false,
+      "autoAct": true,
+      "suggestionMode": false
+    },
+    "typescript": {
+      "enabled": true,
+      "strict": true,
+      "bestPractices": {
+        "typeSystem": {
+          "preferInterfaces": true,
+          "avoidAny": true,
+          "useUnknown": true,
+          "useGenerics": true
+        },
+        "namingConventions": {
+          "pascalCase": ["types", "interfaces", "components"],
+          "camelCase": ["variables", "functions"],
+          "upperCase": ["constants"]
+        },
+        "errorHandling": {
+          "customErrorTypes": true,
+          "resultTypes": true,
+          "properNullChecking": true
+        }
+      }
+    },
+    "javascript": {
+      "enabled": true
+    },
+    "react": {
+      "enabled": true,
+      "bestPractices": {
+        "components": {
+          "useFunctional": true,
+          "keepSmall": true,
+          "useCustomHooks": true,
+          "useComposition": true,
+          "useTypeScript": true
+        },
+        "hooks": {
+          "followRules": true,
+          "useCustomHooks": true,
+          "properDependencies": true,
+          "cleanupEffects": true
+        },
+        "stateManagement": {
+          "useState": true,
+          "useReducer": true,
+          "useContext": true,
+          "avoidPropDrilling": true
+        },
+        "performance": {
+          "useMemoization": true,
+          "useReactMemo": true,
+          "avoidUnnecessaryRenders": true,
+          "useLazyLoading": true
+        },
+        "accessibility": {
+          "useSemanticHTML": true,
+          "useARIA": true,
+          "keyboardNavigation": true,
+          "screenReaderSupport": true
+        },
+        "testing": {
+          "unitTests": true,
+          "integrationTests": true,
+          "useTestingLibrary": true,
+          "testUserInteractions": true
+        }
+      }
+    },
+    "node": {
+      "enabled": true,
+      "bestPractices": {
+        "projectStructure": {
+          "properDirectoryStructure": true,
+          "moduleOrganization": true,
+          "middlewareOrganization": true,
+          "routeOrganization": true,
+          "errorHandling": true,
+          "configManagement": true
+        },
+        "express": {
+          "middlewareSetup": true,
+          "routing": true,
+          "errorHandling": true,
+          "securityMiddleware": true,
+          "validation": true,
+          "staticFileServing": true
+        },
+        "api": {
+          "restPrinciples": true,
+          "versioning": true,
+          "requestValidation": true,
+          "errorHandling": true,
+          "responseFormats": true,
+          "documentation": true
+        },
+        "database": {
+          "useORM": true,
+          "migrations": true,
+          "connectionPooling": true,
+          "transactions": true,
+          "queryOptimization": true,
+          "errorHandling": true
+        },
+        "authentication": {
+          "jwtHandling": true,
+          "passwordHashing": true,
+          "sessionManagement": true,
+          "oauthIntegration": true,
+          "roleBasedAccess": true,
+          "errorHandling": true
+        },
+        "security": {
+          "corsSetup": true,
+          "rateLimiting": true,
+          "securityHeaders": true,
+          "inputValidation": true,
+          "encryption": true,
+          "vulnerabilityHandling": true
+        },
+        "performance": {
+          "caching": true,
+          "asyncOperations": true,
+          "connectionPooling": true,
+          "logging": true,
+          "monitoring": true,
+          "trafficHandling": true
+        },
+        "testing": {
+          "unitTests": true,
+          "integrationTests": true,
+          "testRunners": true,
+          "mocking": true,
+          "errorScenarios": true,
+          "testCoverage": true
+        },
+        "deployment": {
+          "dockerSetup": true,
+          "cicd": true,
+          "environmentVariables": true,
+          "logging": true,
+          "monitoring": true,
+          "errorHandling": true
+        },
+        "general": {
+          "nodeBestPractices": true,
+          "asyncAwait": true,
+          "errorHandling": true,
+          "logging": true,
+          "processSignals": true,
+          "documentation": true
+        }
+      }
+    },
+    "codeStandards": {
+      "react": {
+        "componentStructure": true,
+        "hooks": true,
+        "stateManagement": true,
+        "performance": true,
+        "forms": true,
+        "errorHandling": true,
+        "testing": true,
+        "accessibility": true,
+        "codeOrganization": true
+      },
+      "typescript": {
+        "typeSystem": true,
+        "namingConventions": true,
+        "codeOrganization": true,
+        "functions": true,
+        "bestPractices": true,
+        "errorHandling": true,
+        "patterns": true
+      },
+      "node": {
+        "projectStructure": true,
+        "express": true,
+        "api": true,
+        "database": true,
+        "authentication": true,
+        "security": true,
+        "performance": true,
+        "testing": true,
+        "deployment": true,
+        "bestPractices": true
+      }
+    }
+  }
+  
