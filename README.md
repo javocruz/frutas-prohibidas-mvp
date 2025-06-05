@@ -92,3 +92,12 @@ frutas-prohibidas-mvp/
 
 ## Support
 For any issues or questions, please contact the development team or create an issue in the repository.
+
+## Branch Protection Rules
+
+This project uses GitHub's branch protection rules to maintain code quality and security:
+
+- All changes to the main branch must go through pull requests
+- At least one approval is required before merging
+- Branches must be up to date before merging
+- Status checks must pass before merging
