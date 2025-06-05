@@ -13,53 +13,7 @@ This MVP aims to:
 - Provide a dashboard for tracking CO₂, water, and land savings
 - Use gamification for long-term engagement
 
-## Project Structure
-```
-frutas-prohibidas-mvp/
-├── client/                 # Frontend React application
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/        # Page components
-│   │   ├── services/     # API services
-│   │   ├── utils/        # Utility functions
-│   │   ├── context/      # React context providers
-│   │   ├── types/        # TypeScript type definitions
-│   │   └── config/       # Configuration files
-│   └── public/           # Static assets
-└── server/               # Backend Node.js server
-    ├── src/
-    │   ├── controllers/  # Route controllers
-    │   ├── models/       # Database models
-    │   ├── routes/       # API routes
-    │   ├── services/     # Business logic
-    │   ├── utils/        # Utility functions
-    │   └── config/       # Configuration files
-    └── prisma/          # Database schema and migrations
-```
-
-## Tech Stack
-- **Frontend**:
-  - React 18
-  - TypeScript
-  - Vite
-  - Tailwind CSS
-  - React Query
-  - React Router
-  - Chart.js (for data visualization)
-- **Backend**:
-  - Node.js
-  - Express
-  - TypeScript
-  - PostgreSQL
-  - Prisma ORM
-  - JWT Authentication
-
-## Prerequisites
-- Node.js (v18 or higher)
-- npm (v8 or higher)
-- PostgreSQL (v14 or higher)
-
-## Development Setup
+## Quick Start
 
 1. Clone the repository:
    ```bash
@@ -98,6 +52,66 @@ frutas-prohibidas-mvp/
    # Server runs on http://localhost:3000
    ```
 
+## Documentation
+
+For detailed documentation, please refer to the [docs](./docs) directory:
+
+- [Development Plan](./docs/DEVELOPMENT_PLAN.md) - Project planning and goals
+- [Task List](./docs/TASKS.md) - Implementation tasks and progress
+- [API Documentation](./docs/API.md) - API endpoints and specifications
+- [Setup Guide](./docs/development/setup.md) - Detailed setup instructions
+- [Architecture Overview](./docs/architecture/README.md) - System design and architecture
+
+## Project Structure
+```
+frutas-prohibidas-mvp/
+├── client/                 # Frontend React application
+│   ├── src/
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/        # Page components
+│   │   ├── services/     # API services
+│   │   ├── utils/        # Utility functions
+│   │   ├── context/      # React context providers
+│   │   ├── types/        # TypeScript type definitions
+│   │   └── config/       # Configuration files
+│   └── public/           # Static assets
+├── server/               # Backend Node.js server
+│   ├── src/
+│   │   ├── controllers/  # Route controllers
+│   │   ├── models/       # Database models
+│   │   ├── routes/       # API routes
+│   │   ├── services/     # Business logic
+│   │   ├── utils/        # Utility functions
+│   │   └── config/       # Configuration files
+│   └── prisma/          # Database schema and migrations
+└── docs/                # Project documentation
+    ├── architecture/    # System architecture docs
+    ├── development/     # Development guides
+    └── user/           # User documentation
+```
+
+## Tech Stack
+- **Frontend**:
+  - React 18
+  - TypeScript
+  - Vite
+  - Tailwind CSS
+  - React Query
+  - React Router
+  - Chart.js (for data visualization)
+- **Backend**:
+  - Node.js
+  - Express
+  - TypeScript
+  - PostgreSQL
+  - Prisma ORM
+  - JWT Authentication
+
+## Prerequisites
+- Node.js (v18 or higher)
+- npm (v8 or higher)
+- PostgreSQL (v14 or higher)
+
 ## Key Features
 - POS System Integration
 - Sustainability Receipt Generation
@@ -117,11 +131,6 @@ frutas-prohibidas-mvp/
 - Write tests for critical functionality
 - Document API endpoints
 - Follow Git commit conventions
-
-## Project Documentation
-- [Development Plan](./DEVELOPMENT_PLAN.md)
-- [Task List](./TASKS.md)
-- [API Documentation](./docs/API.md)
 
 ## Support
 For any issues or questions, please contact the development team or create an issue in the repository.

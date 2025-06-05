@@ -12,8 +12,13 @@ import Rewards from './pages/Rewards';
 import Admin from './pages/Admin';
 import LoadingSpinner from './components/LoadingSpinner';
 
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requireAdmin?: boolean;
+}
+
 // Protected Route component
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
   const { user, loading } = useAuth();
 
   if (loading) return <LoadingSpinner />;
@@ -23,7 +28,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
   return <Layout>{children}</Layout>;
 };
 
-export default function App() {
+const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <AuthProvider>
@@ -70,4 +75,6 @@ export default function App() {
       </AuthProvider>
     </ErrorBoundary>
   );
-}
+};
+
+export default App; 
