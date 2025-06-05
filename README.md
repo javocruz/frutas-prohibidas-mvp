@@ -1,6 +1,17 @@
-# Frutas Prohibidas Sustainability Dashboard
+# Frutas Prohibidas MVP
 
-A modern web application for monitoring and analyzing sustainability metrics in the agricultural sector. Built with React, TypeScript, and Node.js.
+A sustainability-focused loyalty system that rewards customers for making eco-friendly food choices. The system integrates with POS systems, generates sustainability receipts, and provides a comprehensive dashboard for tracking environmental impact.
+
+## Project Overview
+
+This MVP aims to:
+- Integrate with POS systems (starting with Pikotea, scalable to Square, etc.)
+- Generate sustainability receipts automatically
+- Implement a point-based loyalty system based on environmental savings
+- Enable rewards, discounts, and promotions
+- Support referrals through promo codes
+- Provide a dashboard for tracking CO₂, water, and land savings
+- Use gamification for long-term engagement
 
 ## Project Structure
 ```
@@ -9,12 +20,21 @@ frutas-prohibidas-mvp/
 │   ├── src/
 │   │   ├── components/    # Reusable UI components
 │   │   ├── pages/        # Page components
-│   │   ├── api/          # API integration
+│   │   ├── services/     # API services
 │   │   ├── utils/        # Utility functions
 │   │   ├── context/      # React context providers
+│   │   ├── types/        # TypeScript type definitions
 │   │   └── config/       # Configuration files
 │   └── public/           # Static assets
 └── server/               # Backend Node.js server
+    ├── src/
+    │   ├── controllers/  # Route controllers
+    │   ├── models/       # Database models
+    │   ├── routes/       # API routes
+    │   ├── services/     # Business logic
+    │   ├── utils/        # Utility functions
+    │   └── config/       # Configuration files
+    └── prisma/          # Database schema and migrations
 ```
 
 ## Tech Stack
@@ -23,16 +43,21 @@ frutas-prohibidas-mvp/
   - TypeScript
   - Vite
   - Tailwind CSS
+  - React Query
   - React Router
-  - Recharts (for data visualization)
+  - Chart.js (for data visualization)
 - **Backend**:
   - Node.js
   - Express
   - TypeScript
+  - PostgreSQL
+  - Prisma ORM
+  - JWT Authentication
 
 ## Prerequisites
-- Node.js (v14 or higher)
-- npm (v6 or higher)
+- Node.js (v18 or higher)
+- npm (v8 or higher)
+- PostgreSQL (v14 or higher)
 
 ## Development Setup
 
@@ -51,7 +76,13 @@ frutas-prohibidas-mvp/
    cd ../client && npm install
    ```
 
-3. Start the development servers:
+3. Set up the database:
+   ```bash
+   cd server
+   npx prisma migrate dev
+   ```
+
+4. Start the development servers:
 
    For the frontend:
    ```bash
@@ -68,20 +99,14 @@ frutas-prohibidas-mvp/
    ```
 
 ## Key Features
-- Real-time sustainability metrics visualization
-- Interactive data dashboards
-- Agricultural impact analysis
-- Environmental monitoring
-- Responsive design for all devices
-- Type-safe development with TypeScript
-
-## Code Organization
-- **Components**: Reusable UI elements following React best practices
-- **Pages**: Main application views and routing
-- **API**: Backend communication and data fetching
-- **Utils**: Helper functions and utilities
-- **Context**: Global state management
-- **Config**: Environment and application configuration
+- POS System Integration
+- Sustainability Receipt Generation
+- Points-based Loyalty System
+- Environmental Impact Tracking
+- Rewards and Promotions
+- Referral System
+- Customer Dashboard
+- Admin Panel
 
 ## Development Guidelines
 - Follow TypeScript best practices
@@ -89,6 +114,14 @@ frutas-prohibidas-mvp/
 - Implement proper error handling
 - Follow the established project structure
 - Use Tailwind CSS for styling
+- Write tests for critical functionality
+- Document API endpoints
+- Follow Git commit conventions
+
+## Project Documentation
+- [Development Plan](./DEVELOPMENT_PLAN.md)
+- [Task List](./TASKS.md)
+- [API Documentation](./docs/API.md)
 
 ## Support
 For any issues or questions, please contact the development team or create an issue in the repository.
@@ -101,3 +134,4 @@ This project uses GitHub's branch protection rules to maintain code quality and 
 - At least one approval is required before merging
 - Branches must be up to date before merging
 - Status checks must pass before merging
+- Code review is required for all changes
