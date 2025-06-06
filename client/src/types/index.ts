@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  password: string;
   role: 'user' | 'admin';
   points: number;
   createdAt: string;
@@ -34,6 +35,19 @@ export interface Reward {
   available: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Metrics {
+  totalPoints: number;
+  pendingReceipts: number;
+  availableRewards: number;
+  recentReceipts: Receipt[];
+  recentRewards: Reward[];
+  sustainabilityMetrics: {
+    co2Saved: number;
+    waterSaved: number;
+    landSaved: number;
+  };
 }
 
 export interface ApiResponse<T> {

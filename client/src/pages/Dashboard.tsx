@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { api } from '../api';
-import { ApiResponse, Receipt, Reward } from '../types';
+import React, { useEffect } from 'react';
+import { useAuthContext } from '../providers/AuthProvider';
+import { useUserContext } from '../providers/UserProvider';
+import { Receipt, Reward } from '../types';
+import ErrorMessage from '../components/ErrorMessage';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 interface DashboardStats {
   totalPoints: number;
@@ -11,71 +13,102 @@ interface DashboardStats {
   recentRewards: Reward[];
 }
 
+interface MetricCardProps {
+  title: string;
+  value: number;
+  unit: string;
+  icon: string;
+}
+
+interface ChartContainerProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+// Reusable MetricCard component
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, unit, icon }) => (
+  <div className="p-6 border border-neutral-200 rounded-lg shadow-sm flex flex-col items-center justify-center bg-white transform transition duration-300 hover:scale-105 hover:shadow-md" role="region" aria-label={`${title} Metric`}>
+    <div className="text-4xl text-accent-500 mb-3" aria-hidden="true">{icon}</div>
+    <div className="text-xl font-semibold text-neutral-800 mb-1">{title}</div>
+    <div className="text-4xl font-bold text-brand animate-count-up" data-value={value}>{value} {unit}</div>
+  </div>
+);
+
+// Reusable ChartContainer component
+const ChartContainer: React.FC<ChartContainerProps> = ({ title, children }) => (
+  <div className="bg-white p-6 rounded-lg shadow-sm border border-neutral-200" role="group" aria-label={`${title} Chart`}>
+    <h2 className="text-xl font-semibold text-neutral-800 mb-4">{title}</h2>
+    {children}
+  </div>
+);
+
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuthContext();
+  const { metrics, receipts, rewards, loading, error, loadMetrics, loadReceipts, loadRewards } = useUserContext();
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const loadDashboardData = async () => {
       try {
-        const response = await api.get<ApiResponse<DashboardStats>>('/dashboard');
-        setStats(response.data.data);
-        setError(null);
+        await Promise.all([
+          loadMetrics(),
+          loadReceipts(),
+          loadRewards()
+        ]);
       } catch (err) {
-        setError('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
+        console.error('Error loading dashboard data:', err);
       }
     };
 
-    fetchDashboardData();
-  }, []);
+    loadDashboardData();
+  }, [loadMetrics, loadReceipts, loadRewards]);
 
-  if (loading) {
+  if (loading.metrics || loading.receipts || loading.rewards) {
+    return <LoadingSpinner />;
+  }
+
+  if (error.metrics || error.receipts || error.rewards) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
+      <ErrorMessage 
+        message={error.metrics || error.receipts || error.rewards || 'An error occurred'} 
+      />
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center text-red-500 p-4">
-        {error}
-      </div>
-    );
-  }
+  const pendingReceipts = receipts.filter(r => r.status === 'pending').length;
+  const availableRewards = rewards.filter(r => r.points <= (metrics?.points || 0)).length;
+  const recentReceipts = receipts.slice(0, 5);
+  const recentRewards = rewards.slice(0, 5);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Welcome, {user?.name}!</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-700">Total Points</h3>
-          <p className="text-3xl font-bold text-indigo-600">{stats?.totalPoints || 0}</p>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-700">Pending Receipts</h3>
-          <p className="text-3xl font-bold text-yellow-600">{stats?.pendingReceipts || 0}</p>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-700">Available Rewards</h3>
-          <p className="text-3xl font-bold text-green-600">{stats?.availableRewards || 0}</p>
-        </div>
+        <MetricCard
+          title="Total Points"
+          value={metrics?.points || 0}
+          unit="points"
+          icon="🏆"
+        />
+        <MetricCard
+          title="Pending Receipts"
+          value={pendingReceipts}
+          unit="receipts"
+          icon="📝"
+        />
+        <MetricCard
+          title="Available Rewards"
+          value={availableRewards}
+          unit="rewards"
+          icon="🎁"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold mb-4">Recent Receipts</h2>
-          {stats?.recentReceipts.length ? (
+        <ChartContainer title="Recent Receipts">
+          {recentReceipts.length ? (
             <ul className="space-y-4">
-              {stats.recentReceipts.map((receipt) => (
+              {recentReceipts.map((receipt) => (
                 <li key={receipt.id} className="border-b pb-2">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">${receipt.amount.toFixed(2)}</span>
@@ -96,13 +129,12 @@ const Dashboard: React.FC = () => {
           ) : (
             <p className="text-gray-500">No recent receipts</p>
           )}
-        </div>
+        </ChartContainer>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold mb-4">Recent Rewards</h2>
-          {stats?.recentRewards.length ? (
+        <ChartContainer title="Recent Rewards">
+          {recentRewards.length ? (
             <ul className="space-y-4">
-              {stats.recentRewards.map((reward) => (
+              {recentRewards.map((reward) => (
                 <li key={reward.id} className="border-b pb-2">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">{reward.name}</span>
@@ -117,7 +149,7 @@ const Dashboard: React.FC = () => {
           ) : (
             <p className="text-gray-500">No recent rewards</p>
           )}
-        </div>
+        </ChartContainer>
       </div>
     </div>
   );

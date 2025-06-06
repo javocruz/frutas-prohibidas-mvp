@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../context/AuthContext';
-import { UserProvider } from '../context/UserContext';
+import { AuthProvider } from '../providers/AuthProvider';
+import { UserProvider } from '../providers/UserProvider';
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   route?: string;

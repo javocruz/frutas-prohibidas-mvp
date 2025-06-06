@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '../../utils/test-utils';
 import Login from '../Login';
-import { useAuth } from '../../context/AuthContext';
+import { useAuthContext } from '../../providers/AuthProvider';
 
-// Mock the useAuth hook
-vi.mock('../../context/AuthContext', () => ({
-  useAuth: vi.fn(),
+// Mock the useAuthContext hook
+vi.mock('../../providers/AuthProvider', () => ({
+  useAuthContext: vi.fn(),
 }));
 
 describe('Login Component', () => {
@@ -14,7 +14,7 @@ describe('Login Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuth as any).mockReturnValue({
+    (useAuthContext as any).mockReturnValue({
       login: mockLogin,
     });
     vi.mock('react-router-dom', async () => {

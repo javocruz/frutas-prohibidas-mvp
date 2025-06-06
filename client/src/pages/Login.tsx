@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuthContext } from '../providers/AuthProvider';
 import { ROUTES } from '../config/routes';
+import type { LoginFormData } from '../types/auth';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({
+  const { login } = useAuthContext();
+  const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
   });
