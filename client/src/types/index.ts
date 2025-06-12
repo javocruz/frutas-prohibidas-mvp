@@ -2,7 +2,6 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  password: string;
   role: 'user' | 'admin';
   points: number;
   createdAt: string;
@@ -17,13 +16,21 @@ export interface AuthState {
 
 export interface Receipt {
   id: string;
-  userId: string;
-  amount: number;
-  points: number;
-  status: 'pending' | 'approved' | 'rejected';
-  imageUrl: string;
-  createdAt: string;
-  updatedAt: string;
+  user_id: string;
+  total_co2_saved: number;
+  total_water_saved: number;
+  total_land_saved: number;
+  points_earned: number;
+  image_url?: string;
+  created_at: string;
+  updated_at: string;
+  // Legacy/compat fields
+  userId?: string;
+  amount?: number;
+  points?: number;
+  imageUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Reward {
@@ -68,4 +75,11 @@ export interface ApiError {
   message: string;
   code?: string;
   status?: number;
+}
+
+export interface AuthContextType extends AuthState {
+  login: (email: string, password: string) => Promise<User>;
+  logout: () => void;
+  register: (email: string, password: string, name: string) => Promise<User>;
+  checkAuth: () => Promise<User | null>;
 } 

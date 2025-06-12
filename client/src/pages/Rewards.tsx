@@ -1,72 +1,74 @@
-import React, { useEffect } from 'react';
-import { useUserContext } from '../providers/UserProvider';
-import { useAuthContext } from '../providers/AuthProvider';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
-import { Reward } from '../types';
+import React, { useState, useEffect } from 'react';
+import { useUser } from '../hooks/useUser';
+import { Reward } from '../types/Reward';
+import { rewardService } from '../services/RewardService';
 
 const Rewards: React.FC = () => {
-  const { user } = useAuthContext();
-  const { rewards, loading, error, loadRewards, redeemReward } = useUserContext();
+  const { metrics, loading: userLoading, error: userError } = useUser();
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadRewards();
-  }, [loadRewards]);
+    setLoading(true);
+    setError(null);
+    rewardService.getAvailableRewards()
+      .then((data) => setRewards(Array.isArray(data) ? data : []))
+      .catch((err) => setError(err.message || 'Failed to fetch rewards'))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const handleRedeem = async (rewardId: string) => {
-    if (!user) return;
-    try {
-      await redeemReward(user.id, rewardId);
-      // Refresh rewards after redemption
-      await loadRewards();
-    } catch (err) {
-      console.error('Error redeeming reward:', err);
-    }
-  };
-
-  if (loading.rewards) {
-    return <LoadingSpinner />;
+  if (userLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
+      </div>
+    );
   }
 
-  if (error.rewards) {
-    return <ErrorMessage message={error.rewards} />;
+  if (userError) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-red-500">{userError}</div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <div>Loading rewards...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!rewards || rewards.length === 0) {
+    return <div>No rewards found.</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Rewards</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Redeem your points for exciting rewards
-        </p>
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Available Rewards</h1>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {rewards.map((reward: Reward) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {rewards.map((reward) => (
           <div
             key={reward.id}
-            className="bg-white overflow-hidden shadow rounded-lg"
+            className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow duration-300"
           >
-            <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900">
-                {reward.name}
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {reward.description}
-              </p>
-              <div className="mt-4">
-                <span className="text-2xl font-bold text-brand">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-neutral-800">{reward.name}</h3>
+              <span className="px-3 py-1 bg-brand/10 text-brand rounded-full text-sm font-medium">
                   {reward.points} points
                 </span>
               </div>
+            <p className="text-neutral-600 mb-4">{reward.description}</p>
               <button
-                onClick={() => handleRedeem(reward.id)}
-                disabled={loading.redeem}
-                className="mt-4 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand hover:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2 px-4 bg-brand text-white rounded-md hover:bg-brand-dark transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={metrics?.totalPoints < reward.points}
               >
-                {loading.redeem ? 'Redeeming...' : 'Redeem'}
+              {metrics?.totalPoints >= reward.points ? 'Redeem Reward' : 'Not Enough Points'}
               </button>
-            </div>
           </div>
         ))}
       </div>

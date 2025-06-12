@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../providers/AuthProvider';
-import { useUserContext } from '../providers/UserProvider';
 import { ROUTES } from '../config/routes';
 import { navigation } from '../config/navigation';
 
@@ -11,7 +10,6 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user } = useAuthContext();
-  const { metrics } = useUserContext();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -22,6 +20,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
     </svg>
   );
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -36,7 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navigation
-                  .filter(item => !item.requireAdmin || user?.role === 'admin')
+                  .filter(item => !item.requireAdmin || user.role === 'admin')
                   .map((item) => (
                     <Link
                       key={item.path}
@@ -90,10 +92,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className="ml-3 relative">
                 <div className="flex items-center">
                   <span className="text-sm font-medium text-gray-700 mr-2">
-                    {user?.name}
+                    {user.name}
                   </span>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {metrics?.points || 0} points
+                    {user.points} points
                   </span>
                 </div>
               </div>
@@ -105,7 +107,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} sm:hidden`}>
           <div className="pt-2 pb-3 space-y-1">
             {navigation
-              .filter(item => !item.requireAdmin || user?.role === 'admin')
+              .filter(item => !item.requireAdmin || user.role === 'admin')
               .map((item) => (
                 <Link
                   key={item.path}
@@ -127,17 +129,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className="flex-shrink-0">
                 <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-brand-100">
                   <span className="text-lg font-medium leading-none text-brand">
-                    {user?.name?.charAt(0).toUpperCase()}
+                    {user.name.charAt(0).toUpperCase()}
                   </span>
                 </span>
               </div>
               <div className="ml-3">
-                <div className="text-base font-medium text-gray-800">{user?.name}</div>
-                <div className="text-sm font-medium text-gray-500">{user?.email}</div>
+                <div className="text-base font-medium text-gray-800">{user.name}</div>
+                <div className="text-sm font-medium text-gray-500">{user.email}</div>
               </div>
               <div className="ml-auto">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  {metrics?.points || 0} points
+                  {user.points} points
                 </span>
               </div>
             </div>

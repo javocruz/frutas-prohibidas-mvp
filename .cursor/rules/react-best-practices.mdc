@@ -1,7 +1,7 @@
 ---
-description:
-globs:
-alwaysApply: false
+description: 
+globs: 
+alwaysApply: true
 ---
 # React Best Practices
 
@@ -77,4 +77,4 @@ alwaysApply: false
 - Use proper imports/exports
 - Document complex component logic
 
-See [client/src/](mdc:client/src/) for implementation.
+See [client/src/](mdc:client/src) for implementation.

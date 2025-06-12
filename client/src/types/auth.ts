@@ -20,8 +20,8 @@ export interface AuthState {
 }
 
 export interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  logout: () => void;
+  register: (email: string, password: string, name: string) => Promise<User>;
+  checkAuth: () => Promise<User | null>;
 } 

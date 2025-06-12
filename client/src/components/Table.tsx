@@ -1,5 +1,4 @@
 import React from 'react';
-import StatusBadge from './StatusBadge';
 
 interface Column<T> {
   header: string;
@@ -90,8 +89,8 @@ function Table<T extends { id: string | number }>({
                   className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 ${column.className || ''}`}
                 >
                   {typeof column.accessor === 'function'
-                    ? column.accessor(item)
-                    : item[column.accessor]}
+                    ? (column.accessor(item) as React.ReactNode)
+                    : (item[column.accessor] as React.ReactNode)}
                 </td>
               ))}
             </tr>

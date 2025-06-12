@@ -1,8 +1,6 @@
 import React from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../providers/AuthProvider';
-import { UserProvider } from '../providers/UserProvider';
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   route?: string;
@@ -30,9 +28,7 @@ const customRender = (
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
       <BrowserRouter>
-        <AuthProvider>
-          <UserProvider>{children}</UserProvider>
-        </AuthProvider>
+        {children}
       </BrowserRouter>
     );
   };

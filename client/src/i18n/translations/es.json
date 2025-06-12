@@ -1,0 +1,20 @@
+{
+  "dashboard": {
+    "title": "Panel de Sostenibilidad",
+    "metrics": {
+      "co2Saved": "CO₂ Ahorrado",
+      "waterSaved": "Agua Ahorrada",
+      "landSaved": "Tierra Ahorrada",
+      "totalPoints": "Puntos Totales"
+    },
+    "menu": {
+      "title": "Elementos del Menú",
+      "addItem": "Añadir Elemento",
+      "editItem": "Editar Elemento",
+      "deleteItem": "Eliminar Elemento",
+      "category": "Categoría",
+      "name": "Nombre",
+      "sustainabilityMetrics": "Métricas de Sostenibilidad"
+    }
+  }
+} 
