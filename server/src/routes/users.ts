@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { logger } from '../utils/logger';
 import { ApiError } from '../utils/ApiError';
-import { getAllUsers, updateUserPoints } from '../services/dataService';
+import { getAllUsers } from '../services/dataService';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
 
@@ -23,7 +24,7 @@ router.get('/', (req, res) => {
 });
 
 // Update user points
-router.post('/:id/points', (req, res) => {
+router.post('/:id/points', async (req, res) => {
   try {
     const { id } = req.params;
     const validation = updatePointsSchema.safeParse(req.body);
@@ -33,8 +34,13 @@ router.post('/:id/points', (req, res) => {
     }
 
     const { points } = validation.data;
-    const user = updateUserPoints(id, points);
-    res.json({ success: true, data: user });
+    const user = await prisma.users.findUnique({ where: { id } });
+    if (!user) throw new ApiError('User not found', 404, 'USER_NOT_FOUND');
+    const updatedUser = await prisma.users.update({
+      where: { id },
+      data: { points },
+    });
+    res.json({ success: true, data: updatedUser });
   } catch (error) {
     if (error instanceof ApiError) throw error;
     logger.error('Error updating user points:', error);
