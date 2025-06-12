@@ -22,6 +22,7 @@ export const useUser = () => {
     try {
       setState(prev => ({ ...prev, loading: true }));
       const metrics = await metricsService.getUserMetrics(user.id);
+      console.log('Fetched metrics:', metrics);
       setState(prev => ({ ...prev, metrics }));
       // Fetch receipts and rewards here if needed
       // For example:

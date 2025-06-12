@@ -18,6 +18,15 @@ const Rewards: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleRedeem = async (rewardId: string) => {
+    try {
+      await rewardService.redeemReward(metrics?.userId, rewardId);
+      // Optionally refresh the rewards list or user metrics
+    } catch (err) {
+      setError(err.message || 'Failed to redeem reward');
+    }
+  };
+
   if (userLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -59,16 +68,21 @@ const Rewards: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-neutral-800">{reward.name}</h3>
               <span className="px-3 py-1 bg-brand/10 text-brand rounded-full text-sm font-medium">
-                  {reward.points} points
-                </span>
-              </div>
+                {reward.points_required} points
+              </span>
+            </div>
             <p className="text-neutral-600 mb-4">{reward.description}</p>
-              <button
-              className="w-full py-2 px-4 bg-brand text-white rounded-md hover:bg-brand-dark transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={metrics?.totalPoints < reward.points}
-              >
-              {metrics?.totalPoints >= reward.points ? 'Redeem Reward' : 'Not Enough Points'}
-              </button>
+            <button
+              className={`w-full py-2 px-4 rounded-md transition-colors duration-300 ${
+                metrics?.totalPoints >= reward.points_required
+                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-red-500 text-white hover:bg-red-600'
+              }`}
+              disabled={metrics?.totalPoints < reward.points_required}
+              onClick={() => handleRedeem(reward.id)}
+            >
+              {metrics?.totalPoints >= reward.points_required ? 'Redeem Reward' : 'Not Enough Points'}
+            </button>
           </div>
         ))}
       </div>
