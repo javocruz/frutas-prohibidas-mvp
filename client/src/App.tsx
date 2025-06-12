@@ -1,78 +1,77 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuthContext } from './providers/AuthProvider';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { AuthProvider } from './providers/AuthProvider';
 import { UserProvider } from './providers/UserProvider';
-import { ROUTES } from './config/routes';
-import ErrorBoundary from './components/ErrorBoundary';
-import Layout from './components/Layout';
+import { ThemeProvider } from './providers/ThemeProvider';
+import { useAuthContext } from './providers/AuthProvider';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Receipts from './pages/Receipts';
 import Rewards from './pages/Rewards';
+import Receipts from './pages/Receipts';
 import Admin from './pages/Admin';
-import LoadingSpinner from './components/LoadingSpinner';
+import Layout from './components/Layout';
+import ErrorBoundary from './components/ErrorBoundary';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
 }
 
-// Protected Route component
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
   const { user, loading } = useAuthContext();
 
-  if (loading) return <LoadingSpinner />;
-  if (!user) return <Navigate to={ROUTES.LOGIN} />;
-  if (requireAdmin && user.role !== 'admin') return <Navigate to={ROUTES.DASHBOARD} />;
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-  return <Layout>{children}</Layout>;
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (requireAdmin && user.role !== 'admin') {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return <>{children}</>;
 };
 
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <UserProvider>
-          <Router>
-            <Routes>
-              <Route path={ROUTES.LOGIN} element={<Login />} />
-              <Route
-                path={ROUTES.DASHBOARD}
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.RECEIPTS}
-                element={
-                  <ProtectedRoute>
-                    <Receipts />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.REWARDS}
-                element={
-                  <ProtectedRoute>
-                    <Rewards />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path={ROUTES.ADMIN}
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <Admin />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} />} />
-            </Routes>
-          </Router>
-        </UserProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <UserProvider>
+      <Router>
+        <Routes>
+                <Route path="/login" element={<Login />} />
+          <Route
+                  path="/"
+            element={
+              <ProtectedRoute>
+                      <Layout>
+                        <Outlet />
+                      </Layout>
+              </ProtectedRoute>
+            }
+                >
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="rewards" element={<Rewards />} />
+                  <Route path="receipts" element={<Receipts />} />
+          <Route
+                    path="admin"
+            element={
+              <ProtectedRoute requireAdmin>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
+                </Route>
+        </Routes>
+      </Router>
+          </UserProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };

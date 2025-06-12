@@ -23,71 +23,39 @@ This MVP aims to:
 
 2. Install dependencies:
    ```bash
-   # Install server dependencies
-   cd server && npm install
-   
-   # Install client dependencies
-   cd ../client && npm install
+   npm install
    ```
 
-3. Set up the database:
+3. Set up environment variables:
    ```bash
-   cd server
-   npx prisma migrate dev
+   cp .env.example .env
+   # Edit .env with your Supabase credentials
    ```
 
-4. Start the development servers:
-
-   For the frontend:
+4. Start the development server:
    ```bash
-   cd client
    npm run dev
    # Access at http://localhost:5173
    ```
 
-   For the backend:
-   ```bash
-   cd server
-   npm run dev
-   # Server runs on http://localhost:3000
-   ```
-
-## Documentation
-
-For detailed documentation, please refer to the [docs](./docs) directory:
-
-- [Development Plan](./docs/DEVELOPMENT_PLAN.md) - Project planning and goals
-- [Task List](./docs/TASKS.md) - Implementation tasks and progress
-- [API Documentation](./docs/API.md) - API endpoints and specifications
-- [Setup Guide](./docs/development/setup.md) - Detailed setup instructions
-- [Architecture Overview](./docs/architecture/README.md) - System design and architecture
-
 ## Project Structure
 ```
 frutas-prohibidas-mvp/
-├── client/                 # Frontend React application
+├── client/              # Frontend application
 │   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/        # Page components
-│   │   ├── services/     # API services
-│   │   ├── utils/        # Utility functions
-│   │   ├── context/      # React context providers
-│   │   ├── types/        # TypeScript type definitions
-│   │   └── config/       # Configuration files
-│   └── public/           # Static assets
-├── server/               # Backend Node.js server
-│   ├── src/
-│   │   ├── controllers/  # Route controllers
-│   │   ├── models/       # Database models
-│   │   ├── routes/       # API routes
-│   │   ├── services/     # Business logic
-│   │   ├── utils/        # Utility functions
-│   │   └── config/       # Configuration files
-│   └── prisma/          # Database schema and migrations
-└── docs/                # Project documentation
-    ├── architecture/    # System architecture docs
-    ├── development/     # Development guides
-    └── user/           # User documentation
+│   │   ├── components/  # Reusable UI components
+│   │   ├── hooks/      # Custom React hooks
+│   │   ├── lib/        # Library configurations
+│   │   ├── pages/      # Page components
+│   │   ├── providers/  # React context providers
+│   │   ├── services/   # API services
+│   │   ├── types/      # TypeScript types
+│   │   └── utils/      # Utility functions
+│   ├── public/         # Static assets
+│   └── tests/          # Test files
+├── server/             # Backend application
+├── supabase/          # Supabase configuration
+└── docs/              # Documentation
 ```
 
 ## Tech Stack
@@ -96,31 +64,168 @@ frutas-prohibidas-mvp/
   - TypeScript
   - Vite
   - Tailwind CSS
-  - React Query
+  - Zustand (State Management)
   - React Router
-  - Chart.js (for data visualization)
-- **Backend**:
-  - Node.js
-  - Express
-  - TypeScript
-  - PostgreSQL
-  - Prisma ORM
-  - JWT Authentication
+  - Supabase (Backend as a Service)
 
-## Prerequisites
-- Node.js (v18 or higher)
-- npm (v8 or higher)
-- PostgreSQL (v14 or higher)
+## Data Types and Structures
 
-## Key Features
-- POS System Integration
-- Sustainability Receipt Generation
-- Points-based Loyalty System
-- Environmental Impact Tracking
-- Rewards and Promotions
-- Referral System
-- Customer Dashboard
-- Admin Panel
+### Domain Models
+
+#### User
+```typescript
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'user' | 'admin';
+  points: number;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+#### Receipt
+```typescript
+interface Receipt {
+  id: string;
+  userId: string;
+  total_co2_saved: number;
+  total_water_saved: number;
+  total_land_saved: number;
+  points_earned: number;
+  status: 'pending' | 'approved' | 'rejected';
+  imageUrl: string;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+#### Reward
+```typescript
+interface Reward {
+  id: string;
+  name: string;
+  description: string;
+  points_required: number;
+  imageUrl: string;
+  available: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+#### Metrics
+```typescript
+interface Metrics {
+  totalPoints: number;
+  pendingReceipts: number;
+  availableRewards: number;
+  recentReceipts: Receipt[];
+  recentRewards: Reward[];
+  sustainabilityMetrics: {
+    co2Saved: number;
+    waterSaved: number;
+    landSaved: number;
+  };
+}
+```
+
+#### MenuItem
+```typescript
+interface MenuItem {
+  id: number;
+  category: string;
+  name: string;
+  sustainabilityMetrics: {
+    co2Saved: number;  // in kg
+    waterSaved: number; // in liters
+    landSaved: number; // in m2
+  };
+  points: number;
+}
+```
+
+### Transport DTOs
+
+#### API Response
+```typescript
+interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  error?: string;
+}
+```
+
+#### Paginated Response
+```typescript
+interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+```
+
+#### API Error
+```typescript
+interface ApiError {
+  message: string;
+  code?: string;
+  status?: number;
+}
+```
+
+### UI Components
+
+#### Table Component
+```typescript
+interface Column<T> {
+  header: string;
+  accessor: keyof T | ((item: T) => React.ReactNode);
+  className?: string;
+  sortable?: boolean;
+  align?: 'left' | 'center' | 'right';
+}
+
+interface TableProps<T> {
+  columns: Column<T>[];
+  data: T[];
+  onRowClick?: (item: T) => void;
+  className?: string;
+  emptyMessage?: string;
+  loading?: boolean;
+  error?: string | null;
+}
+```
+
+## Data Flow
+
+1. **User Input/API Request**
+   - User interacts with UI components
+   - Form data is collected and validated
+   - API requests are formatted using DTOs
+
+2. **Data Transformation**
+   - Input data is transformed to domain models
+   - Business logic is applied
+   - Data is prepared for storage
+
+3. **Storage**
+   - Domain models are mapped to database schema
+   - Data is persisted in Supabase
+   - Relationships are maintained
+
+4. **Retrieval**
+   - Data is fetched from database
+   - Domain models are reconstructed
+   - Data is prepared for UI
+
+5. **Response/UI Update**
+   - Data is transformed to view models
+   - UI components are updated
+   - User receives feedback
 
 ## Development Guidelines
 - Follow TypeScript best practices
@@ -132,15 +237,32 @@ frutas-prohibidas-mvp/
 - Document API endpoints
 - Follow Git commit conventions
 
+## Next Steps
+
+1. **Implement Supabase Integration**
+   - Set up database schema
+   - Create migration scripts
+   - Implement data access layer
+
+2. **Update Data Types**
+   - Standardize type definitions
+   - Remove duplicates
+   - Add proper validation
+
+3. **Refine Type Mappings**
+   - Implement proper DTOs
+   - Add transformation layers
+   - Improve error handling
+
+4. **Add Schema Validation**
+   - Implement Zod schemas
+   - Add runtime validation
+   - Improve error messages
+
+5. **Document API Endpoints**
+   - Create OpenAPI specification
+   - Document request/response types
+   - Add usage examples
+
 ## Support
 For any issues or questions, please contact the development team or create an issue in the repository.
-
-## Branch Protection Rules
-
-This project uses GitHub's branch protection rules to maintain code quality and security:
-
-- All changes to the main branch must go through pull requests
-- At least one approval is required before merging
-- Branches must be up to date before merging
-- Status checks must pass before merging
-- Code review is required for all changes

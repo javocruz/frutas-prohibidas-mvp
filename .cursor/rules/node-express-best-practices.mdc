@@ -1,7 +1,7 @@
 ---
-description:
-globs:
-alwaysApply: false
+description: 
+globs: 
+alwaysApply: true
 ---
 # Node.js and Express.js Best Practices
 
@@ -85,4 +85,4 @@ alwaysApply: false
 - Handle process signals properly
 - Document code properly
 
-See [server/src/](mdc:server/src/) for implementation.
+See [server/src/](mdc:server/src) for implementation.

@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { ApiResponse } from '../types';
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: isDevelopment ? 'http://localhost:3000/api' : '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -40,7 +42,7 @@ api.interceptors.response.use(
         }
 
         const response = await axios.post<ApiResponse<{ token: string }>>(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/auth/refresh`,
+          `${isDevelopment ? 'http://localhost:3000/api' : '/api'}/auth/refresh`,
           { refreshToken }
         );
 

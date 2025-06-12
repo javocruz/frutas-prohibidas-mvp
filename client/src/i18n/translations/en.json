@@ -1,0 +1,20 @@
+{
+  "dashboard": {
+    "title": "Sustainability Dashboard",
+    "metrics": {
+      "co2Saved": "CO₂ Saved",
+      "waterSaved": "Water Saved",
+      "landSaved": "Land Saved",
+      "totalPoints": "Total Points"
+    },
+    "menu": {
+      "title": "Menu Items",
+      "addItem": "Add Item",
+      "editItem": "Edit Item",
+      "deleteItem": "Delete Item",
+      "category": "Category",
+      "name": "Name",
+      "sustainabilityMetrics": "Sustainability Metrics"
+    }
+  }
+} 

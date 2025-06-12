@@ -1,7 +1,7 @@
 ---
-description:
-globs:
-alwaysApply: false
+description: 
+globs: 
+alwaysApply: true
 ---
 # TypeScript Best Practices
 
@@ -56,4 +56,4 @@ alwaysApply: false
 - Leverage dependency injection
 - Use the Module pattern for encapsulation
 
-See [server/src/types/](mdc:server/src/types/) and [client/src/](mdc:client/src/) for implementation.
+See [server/src/types/](mdc:server/src/types) and [client/src/](mdc:client/src) for implementation.

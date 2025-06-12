@@ -1,17 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAuthContext } from '../providers/AuthProvider';
-import { useUserContext } from '../providers/UserProvider';
-import { Receipt, Reward } from '../types';
-import ErrorMessage from '../components/ErrorMessage';
-import LoadingSpinner from '../components/LoadingSpinner';
-
-interface DashboardStats {
-  totalPoints: number;
-  pendingReceipts: number;
-  availableRewards: number;
-  recentReceipts: Receipt[];
-  recentRewards: Reward[];
-}
+import { useUser } from '../hooks/useUser';
 
 interface MetricCardProps {
   title: string;
@@ -30,7 +19,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, unit, icon }) => 
   <div className="p-6 border border-neutral-200 rounded-lg shadow-sm flex flex-col items-center justify-center bg-white transform transition duration-300 hover:scale-105 hover:shadow-md" role="region" aria-label={`${title} Metric`}>
     <div className="text-4xl text-accent-500 mb-3" aria-hidden="true">{icon}</div>
     <div className="text-xl font-semibold text-neutral-800 mb-1">{title}</div>
-    <div className="text-4xl font-bold text-brand animate-count-up" data-value={value}>{value} {unit}</div>
+    <div className="text-4xl font-bold text-brand">{value.toFixed(2)} {unit}</div>
   </div>
 );
 
@@ -44,85 +33,82 @@ const ChartContainer: React.FC<ChartContainerProps> = ({ title, children }) => (
 
 const Dashboard: React.FC = () => {
   const { user } = useAuthContext();
-  const { metrics, receipts, rewards, loading, error, loadMetrics, loadReceipts, loadRewards } = useUserContext();
+  const { metrics, loading, error } = useUser();
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        await Promise.all([
-          loadMetrics(),
-          loadReceipts(),
-          loadRewards()
-        ]);
-      } catch (err) {
-        console.error('Error loading dashboard data:', err);
-      }
-    };
-
-    loadDashboardData();
-  }, [loadMetrics, loadReceipts, loadRewards]);
-
-  if (loading.metrics || loading.receipts || loading.rewards) {
-    return <LoadingSpinner />;
-  }
-
-  if (error.metrics || error.receipts || error.rewards) {
+  if (loading) {
     return (
-      <ErrorMessage 
-        message={error.metrics || error.receipts || error.rewards || 'An error occurred'} 
-      />
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
+      </div>
     );
   }
 
-  const pendingReceipts = receipts.filter(r => r.status === 'pending').length;
-  const availableRewards = rewards.filter(r => r.points <= (metrics?.points || 0)).length;
-  const recentReceipts = receipts.slice(0, 5);
-  const recentRewards = rewards.slice(0, 5);
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
+
+  if (!metrics) {
+    return null;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Welcome, {user?.name}!</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* Top Metrics Section */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <MetricCard
           title="Total Points"
-          value={metrics?.points || 0}
+          value={metrics.totalPoints}
           unit="points"
           icon="🏆"
         />
         <MetricCard
-          title="Pending Receipts"
-          value={pendingReceipts}
-          unit="receipts"
-          icon="📝"
+          title="CO₂ Saved"
+          value={metrics.sustainabilityMetrics.co2Saved}
+          unit="kg"
+          icon="🌱"
         />
         <MetricCard
-          title="Available Rewards"
-          value={availableRewards}
-          unit="rewards"
-          icon="🎁"
+          title="Water Saved"
+          value={metrics.sustainabilityMetrics.waterSaved}
+          unit="L"
+          icon="💧"
+        />
+        <MetricCard
+          title="Land Saved"
+          value={metrics.sustainabilityMetrics.landSaved}
+          unit="m²"
+          icon="🌍"
         />
       </div>
 
+      {/* Recent Activity Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <ChartContainer title="Recent Receipts">
-          {recentReceipts.length ? (
+          {metrics.recentReceipts.length ? (
             <ul className="space-y-4">
-              {recentReceipts.map((receipt) => (
-                <li key={receipt.id} className="border-b pb-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">${receipt.amount.toFixed(2)}</span>
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      receipt.status === 'approved' ? 'bg-green-100 text-green-800' :
-                      receipt.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {receipt.status}
-                    </span>
+              {metrics.recentReceipts.map((receipt) => (
+                <li key={receipt.id} className="border-b pb-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="text-sm text-gray-500">
+                      {new Date(receipt.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="text-sm font-semibold text-brand">
+                      +{receipt.pointsEarned} points
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {new Date(receipt.createdAt).toLocaleDateString()}
-                  </div>
+                  <ul className="text-sm text-gray-600">
+                    {receipt.items.map((item, index) => (
+                      <li key={index}>
+                        {item.quantity}x {item.name}
+                      </li>
+                    ))}
+                  </ul>
                 </li>
               ))}
             </ul>
@@ -132,17 +118,19 @@ const Dashboard: React.FC = () => {
         </ChartContainer>
 
         <ChartContainer title="Recent Rewards">
-          {recentRewards.length ? (
+          {metrics.recentRewards.length ? (
             <ul className="space-y-4">
-              {recentRewards.map((reward) => (
-                <li key={reward.id} className="border-b pb-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">{reward.name}</span>
-                    <span className="text-indigo-600">{reward.points} points</span>
+              {metrics.recentRewards.map((reward) => (
+                <li key={reward.id} className="border-b pb-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="font-semibold text-neutral-800">
+                      {reward.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {new Date(reward.redeemedAt).toLocaleDateString()}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {reward.description}
-                  </div>
+                  <p className="text-sm text-gray-600">{reward.description}</p>
                 </li>
               ))}
             </ul>

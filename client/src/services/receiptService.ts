@@ -38,5 +38,11 @@ export const receiptService = {
   async rejectReceipt(id: string): Promise<ApiResponse<Receipt>> {
     const response = await api.post<ApiResponse<Receipt>>(`/receipts/${id}/reject`);
     return response.data;
-  }
+  },
+
+  getUserReceipts: async (userId: string) => {
+    const response = await fetch(`/api/receipts/user/${userId}`);
+    if (!response.ok) throw new Error('Failed to fetch receipts');
+    return await response.json();
+  },
 }; 

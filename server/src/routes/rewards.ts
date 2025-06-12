@@ -61,4 +61,13 @@ router.post('/:rewardId/redeem', async (req, res) => {
   }
 });
 
+// Update rewards to set two of them to have a high point number
+const rewards = [
+  { id: '1', name: 'Reward 1', description: 'Description for Reward 1', points_required: 1000 },
+  { id: '2', name: 'Reward 2', description: 'Description for Reward 2', points_required: 5000 },
+  { id: '3', name: 'Reward 3', description: 'Description for Reward 3', points_required: 2000 },
+  { id: '4', name: 'Reward 4', description: 'Description for Reward 4', points_required: 3000 },
+  { id: '5', name: 'Reward 5', description: 'Description for Reward 5', points_required: 4000 },
+];
+
 export default router; 
