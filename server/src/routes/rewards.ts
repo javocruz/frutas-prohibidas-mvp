@@ -2,46 +2,58 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { logger } from '../utils/logger';
 import { ApiError } from '../utils/ApiError';
-import { getAllRewards, getRewardById, updateUserPoints } from '../services/dataService';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
 
 // Validation schemas
 const redeemSchema = z.object({
-  userId: z.string(),
+  user_id: z.string(),
 });
 
 // Get all rewards
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const rewards = getAllRewards();
-    res.json({ success: true, data: rewards });
+    const rewards = await prisma.rewards.findMany();
+    res.json(rewards);
   } catch (error) {
     logger.error('Error fetching rewards:', error);
-    throw new ApiError('Failed to fetch rewards', 500, 'FETCH_REWARDS_ERROR');
+    res.status(500).json({ error: 'Failed to fetch rewards' });
   }
 });
 
 // Redeem a reward
-router.post('/:rewardId/redeem', (req, res) => {
+router.post('/:rewardId/redeem', async (req, res) => {
   try {
     const { rewardId } = req.params;
     const validation = redeemSchema.safeParse(req.body);
     
     if (!validation.success) {
-      throw new ApiError('Invalid userId', 400, 'INVALID_USER_ID');
+      throw new ApiError('Invalid user_id', 400, 'INVALID_USER_ID');
     }
 
-    const { userId } = validation.data;
-    const reward = getRewardById(rewardId);
-    const user = updateUserPoints(userId, (user) => {
-      if (user.points < reward.pointsCost) {
-        throw new ApiError('Not enough points', 400, 'NOT_ENOUGH_POINTS');
-      }
-      return user.points - reward.pointsCost;
+    const { user_id } = validation.data;
+    // Fetch reward and user from DB
+    const reward = await prisma.rewards.findUnique({ where: { id: rewardId } });
+    if (!reward) throw new ApiError('Reward not found', 404, 'REWARD_NOT_FOUND');
+    const user = await prisma.users.findUnique({ where: { id: user_id } });
+    if (!user) throw new ApiError('User not found', 404, 'USER_NOT_FOUND');
+    if (user.points < reward.points_required) {
+      throw new ApiError('Not enough points', 400, 'NOT_ENOUGH_POINTS');
+    }
+    // Deduct points and create user_reward
+    await prisma.users.update({
+      where: { id: user_id },
+      data: { points: user.points - reward.points_required },
     });
-
-    res.json({ success: true, data: { remainingPoints: user.points } });
+    await prisma.user_rewards.create({
+      data: {
+        user_id,
+        reward_id: rewardId,
+        redeemed_at: new Date().toISOString(),
+      },
+    });
+    res.json({ success: true, data: { remaining_points: user.points - reward.points_required } });
   } catch (error) {
     if (error instanceof ApiError) throw error;
     logger.error('Error redeeming reward:', error);

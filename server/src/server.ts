@@ -9,11 +9,24 @@ import usersRouter from './routes/users';
 import rewardsRouter from './routes/rewards';
 import receiptsRouter from './routes/receipts';
 import metricsRouter from './routes/metrics';
+import menuItemsRouter from './routes/menuItems';
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Security middleware with CSP configuration
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "http://localhost:3000", "http://localhost:5174"],
+    },
+  },
+}));
+
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
@@ -34,6 +47,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/rewards', rewardsRouter);
 app.use('/api/receipts', receiptsRouter);
 app.use('/api/metrics', metricsRouter);
+app.use('/api/menu-items', menuItemsRouter);
 
 // Error handling
 app.use(errorHandler);

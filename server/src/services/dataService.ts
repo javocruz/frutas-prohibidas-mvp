@@ -1,3 +1,5 @@
+// DEPRECATED: This file used to provide mock data from JSON. Do not use in production. Use Prisma/database instead.
+
 import { User, Reward, Receipt, Metrics } from '../types';
 import { ApiError } from '../utils/ApiError';
 import { logger } from '../utils/logger';
