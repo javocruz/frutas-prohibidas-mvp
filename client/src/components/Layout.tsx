@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../providers/AuthProvider';
 import { ROUTES } from '../config/routes';
 import { navigation } from '../config/navigation';
+import symbolLogo from '../assets/symbol-logo.png';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,8 +33,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <Link to={ROUTES.DASHBOARD} className="text-xl font-bold text-brand">
-                  Frutas Prohibidas
+                <Link to={ROUTES.DASHBOARD} className="flex items-center">
+                  <img src={symbolLogo} alt="Frutas Prohibidas Symbol Logo" className="h-20 w-auto mr-4" style={{ maxHeight: '80px' }} />
+                  <span className="text-3xl font-bold text-brand">Frutas Prohibidas</span>
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
