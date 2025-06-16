@@ -3,11 +3,7 @@ import { AuthState, User } from '../types';
 import { supabase } from '../lib/supabase';
 
 async function fetchUserProfile(userId: string): Promise<User | null> {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', userId)
-    .single();
+  const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
   if (error || !data) return null;
   return {
     id: data.id,
@@ -24,7 +20,7 @@ export const useAuth = () => {
   const [state, setState] = useState<AuthState>({
     user: null,
     loading: false,
-    error: null
+    error: null,
   });
 
   const login = useCallback(async (email: string, password: string) => {
@@ -56,7 +52,7 @@ export const useAuth = () => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name } }
+        options: { data: { name } },
       });
       if (error || !data.user) {
         throw new Error(error?.message || 'Registration failed');
@@ -107,6 +103,6 @@ export const useAuth = () => {
     login,
     logout,
     register,
-    checkAuth
+    checkAuth,
   };
-}; 
+};

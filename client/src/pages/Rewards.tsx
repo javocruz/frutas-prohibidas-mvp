@@ -12,9 +12,10 @@ const Rewards: React.FC = () => {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    rewardService.getAvailableRewards()
-      .then((data) => setRewards(Array.isArray(data) ? data : []))
-      .catch((err) => setError(err.message || 'Failed to fetch rewards'))
+    rewardService
+      .getAvailableRewards()
+      .then(data => setRewards(Array.isArray(data) ? data : []))
+      .catch(err => setError(err.message || 'Failed to fetch rewards'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -60,7 +61,7 @@ const Rewards: React.FC = () => {
       <h1 className="text-3xl font-bold mb-8">Available Rewards</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {rewards.map((reward) => (
+        {rewards.map(reward => (
           <div
             key={reward.id}
             className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow duration-300"
@@ -81,7 +82,9 @@ const Rewards: React.FC = () => {
               disabled={metrics?.totalPoints < reward.points_required}
               onClick={() => handleRedeem(reward.id)}
             >
-              {metrics?.totalPoints >= reward.points_required ? 'Redeem Reward' : 'Not Enough Points'}
+              {metrics?.totalPoints >= reward.points_required
+                ? 'Redeem Reward'
+                : 'Not Enough Points'}
             </button>
           </div>
         ))}
@@ -90,4 +93,4 @@ const Rewards: React.FC = () => {
   );
 };
 
-export default Rewards; 
+export default Rewards;

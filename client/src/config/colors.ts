@@ -118,4 +118,4 @@ export const colors: ColorPalette = {
     paper: '#F5F5F5',
   },
   divider: 'rgba(0, 0, 0, 0.12)',
-}; 
+};

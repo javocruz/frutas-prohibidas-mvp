@@ -19,9 +19,10 @@ const Receipts: React.FC = () => {
     }
     setLoading(true);
     setError(null);
-    receiptService.getUserReceipts(userId)
-      .then((data) => setReceipts(Array.isArray(data) ? data : []))
-      .catch((err) => setError(err.message || 'Failed to fetch receipts'))
+    receiptService
+      .getUserReceipts(userId)
+      .then(data => setReceipts(Array.isArray(data) ? data : []))
+      .catch(err => setError(err.message || 'Failed to fetch receipts'))
       .finally(() => setLoading(false));
   }, [userId]);
 
@@ -29,7 +30,7 @@ const Receipts: React.FC = () => {
     setExpandedReceiptId(expandedReceiptId === receiptId ? null : receiptId);
   };
 
-  const formatDecimal = (value: any) => {
+  const formatDecimal = (value: unknown) => {
     if (value === null || value === undefined) return 'N/A';
     // Convert to number if it's a Decimal or string
     const num = typeof value === 'string' ? parseFloat(value) : Number(value);
@@ -69,15 +70,17 @@ const Receipts: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-neutral-200">
-              {receipts.map((receipt) => (
+              {receipts.map(receipt => (
                 <React.Fragment key={receipt.id}>
                   <tr className="hover:bg-neutral-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
-                      {receipt.created_at ? new Date(receipt.created_at).toLocaleDateString() : 'N/A'}
+                      {receipt.created_at
+                        ? new Date(receipt.created_at).toLocaleDateString()
+                        : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
-                      {receipt.points_earned !== undefined && receipt.points_earned !== null 
-                        ? `${receipt.points_earned} points` 
+                      {receipt.points_earned !== undefined && receipt.points_earned !== null
+                        ? `${receipt.points_earned} points`
                         : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
@@ -88,7 +91,7 @@ const Receipts: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
-                      <button 
+                      <button
                         onClick={() => toggleReceipt(receipt.id)}
                         className="text-brand hover:text-brand-dark"
                       >
@@ -102,20 +105,35 @@ const Receipts: React.FC = () => {
                         <div className="space-y-4">
                           <h4 className="font-medium text-neutral-900">Ordered Items:</h4>
                           <div className="space-y-2">
-                            {receipt.receipt_items.map((item) => (
-                              <div key={item.id} className="flex justify-between items-center p-3 bg-white rounded-md shadow-sm">
+                            {receipt.receipt_items.map(item => (
+                              <div
+                                key={item.id}
+                                className="flex justify-between items-center p-3 bg-white rounded-md shadow-sm"
+                              >
                                 <div>
                                   <div className="font-medium">{item.menu_items.name}</div>
-                                  <div className="text-sm text-neutral-500">Quantity: {item.quantity}</div>
+                                  <div className="text-sm text-neutral-500">
+                                    Quantity: {item.quantity}
+                                  </div>
                                 </div>
                                 <div className="text-right space-y-1">
                                   <div className="text-sm">
-                                    <span className="font-medium">Category:</span> {item.menu_items.category}
+                                    <span className="font-medium">Category:</span>{' '}
+                                    {item.menu_items.category}
                                   </div>
                                   <div className="text-xs text-neutral-500">
-                                    <div>CO₂: {formatDecimal(item.menu_items.co2_saved * item.quantity)} kg</div>
-                                    <div>Water: {formatDecimal(item.menu_items.water_saved * item.quantity)} L</div>
-                                    <div>Land: {formatDecimal(item.menu_items.land_saved * item.quantity)} m²</div>
+                                    <div>
+                                      CO₂:{' '}
+                                      {formatDecimal(item.menu_items.co2_saved * item.quantity)} kg
+                                    </div>
+                                    <div>
+                                      Water:{' '}
+                                      {formatDecimal(item.menu_items.water_saved * item.quantity)} L
+                                    </div>
+                                    <div>
+                                      Land:{' '}
+                                      {formatDecimal(item.menu_items.land_saved * item.quantity)} m²
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -135,4 +153,4 @@ const Receipts: React.FC = () => {
   );
 };
 
-export default Receipts; 
+export default Receipts;

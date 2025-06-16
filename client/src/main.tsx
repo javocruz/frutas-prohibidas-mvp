@@ -22,4 +22,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       </QueryClientProvider>
     </ErrorBoundary>
   </React.StrictMode>
-); 
+);

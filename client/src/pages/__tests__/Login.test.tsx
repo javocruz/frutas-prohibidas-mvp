@@ -2,17 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Login from '../Login';
 import { useAuthContext } from '../../providers/AuthProvider';
-import { useNavigate } from 'react-router-dom';
 
 // Mock the useAuthContext hook
 vi.mock('../../providers/AuthProvider', () => ({
   useAuthContext: vi.fn(),
-}));
-
-// Mock useNavigate
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => mockNavigate,
 }));
 
 describe('Login Component', () => {
@@ -20,14 +13,14 @@ describe('Login Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthContext as any).mockReturnValue({
+    (useAuthContext as unknown as unknown).mockReturnValue({
       login: mockLogin,
     });
   });
 
   it('renders login form', () => {
     render(<Login />);
-    
+
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
@@ -35,7 +28,7 @@ describe('Login Component', () => {
 
   it('handles form submission', async () => {
     render(<Login />);
-    
+
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
@@ -48,7 +41,7 @@ describe('Login Component', () => {
   it('displays error message on failed login', async () => {
     mockLogin.mockRejectedValueOnce(new Error('Invalid credentials'));
     render(<Login />);
-    
+
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
@@ -60,9 +53,9 @@ describe('Login Component', () => {
 
   it('disables submit button while loading', () => {
     render(<Login />);
-    
+
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
     expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
   });
-}); 
+});

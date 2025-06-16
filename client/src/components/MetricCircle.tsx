@@ -81,4 +81,4 @@ const MetricCircle: React.FC<MetricCircleProps> = ({
   );
 };
 
-export default MetricCircle; 
+export default MetricCircle;

@@ -8,31 +8,27 @@ interface StatusBadgeProps {
   showIcon?: boolean;
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ 
-  status, 
-  className = '',
-  showIcon = true
-}) => {
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = '', showIcon = true }) => {
   const getStatusConfig = (status: Status) => {
     switch (status) {
       case 'approved':
         return {
           color: 'bg-green-100 text-green-800',
           icon: '✓',
-          label: 'Approved'
+          label: 'Approved',
         };
       case 'rejected':
         return {
           color: 'bg-red-100 text-red-800',
           icon: '✕',
-          label: 'Rejected'
+          label: 'Rejected',
         };
       case 'pending':
       default:
         return {
           color: 'bg-yellow-100 text-yellow-800',
           icon: '⟳',
-          label: 'Pending'
+          label: 'Pending',
         };
     }
   };
@@ -55,4 +51,4 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   );
 };
 
-export default StatusBadge; 
+export default StatusBadge;

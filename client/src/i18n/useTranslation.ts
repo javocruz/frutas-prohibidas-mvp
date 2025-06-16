@@ -3,7 +3,6 @@ import enTranslations from './translations/en.json';
 import esTranslations from './translations/es.json';
 
 type Language = 'en' | 'es';
-type Translations = typeof enTranslations;
 
 const translations = {
   en: enTranslations,
@@ -16,7 +15,7 @@ export function useTranslation() {
   const t = useCallback(
     (key: string) => {
       const keys = key.split('.');
-      let value: any = translations[language];
+      let value: unknown = translations[language];
 
       for (const k of keys) {
         if (value && typeof value === 'object') {
@@ -42,4 +41,4 @@ export function useTranslation() {
     language,
     changeLanguage,
   };
-} 
+}

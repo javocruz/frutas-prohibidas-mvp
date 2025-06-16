@@ -34,14 +34,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
                 <Link to={ROUTES.DASHBOARD} className="flex items-center">
-                  <img src={symbolLogo} alt="Frutas Prohibidas Symbol Logo" className="h-20 w-auto mr-4" style={{ maxHeight: '80px' }} />
+                  <img
+                    src={symbolLogo}
+                    alt="Frutas Prohibidas Symbol Logo"
+                    className="h-20 w-auto mr-4"
+                    style={{ maxHeight: '80px' }}
+                  />
                   <span className="text-3xl font-bold text-brand">Frutas Prohibidas</span>
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navigation
                   .filter(item => !item.requireAdmin || user.role === 'admin')
-                  .map((item) => (
+                  .map(item => (
                     <Link
                       key={item.path}
                       to={item.path}
@@ -75,7 +80,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   stroke="currentColor"
                   aria-hidden="true"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
                 <svg
                   className={`${isMobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
@@ -85,7 +95,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   stroke="currentColor"
                   aria-hidden="true"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -93,9 +108,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="hidden sm:ml-6 sm:flex sm:items-center">
               <div className="ml-3 relative">
                 <div className="flex items-center">
-                  <span className="text-sm font-medium text-gray-700 mr-2">
-                    {user.name}
-                  </span>
+                  <span className="text-sm font-medium text-gray-700 mr-2">{user.name}</span>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     {user.points} points
                   </span>
@@ -110,7 +123,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="pt-2 pb-3 space-y-1">
             {navigation
               .filter(item => !item.requireAdmin || user.role === 'admin')
-              .map((item) => (
+              .map(item => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -149,11 +162,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">{children}</main>
     </div>
   );
 };
 
-export default Layout; 
+export default Layout;

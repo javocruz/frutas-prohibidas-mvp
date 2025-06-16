@@ -6,4 +6,4 @@ export const ROUTES = {
   ADMIN: '/admin',
 } as const;
 
-export type Route = typeof ROUTES[keyof typeof ROUTES]; 
+export type Route = (typeof ROUTES)[keyof typeof ROUTES];

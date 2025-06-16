@@ -18,16 +18,28 @@ interface ChartContainerProps {
 
 // Reusable MetricCard component
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, unit, icon }) => (
-  <div className="p-6 border border-neutral-200 rounded-lg shadow-sm flex flex-col items-center justify-center bg-white transform transition duration-300 hover:scale-105 hover:shadow-md" role="region" aria-label={`${title} Metric`}>
-    <div className="text-4xl text-accent-500 mb-3" aria-hidden="true">{icon}</div>
+  <div
+    className="p-6 border border-neutral-200 rounded-lg shadow-sm flex flex-col items-center justify-center bg-white transform transition duration-300 hover:scale-105 hover:shadow-md"
+    role="region"
+    aria-label={`${title} Metric`}
+  >
+    <div className="text-4xl text-accent-500 mb-3" aria-hidden="true">
+      {icon}
+    </div>
     <div className="text-xl font-semibold text-neutral-800 mb-1">{title}</div>
-    <div className="text-4xl font-bold text-brand">{value.toFixed(2)} {unit}</div>
+    <div className="text-4xl font-bold text-brand">
+      {value.toFixed(2)} {unit}
+    </div>
   </div>
 );
 
 // Reusable ChartContainer component
 const ChartContainer: React.FC<ChartContainerProps> = ({ title, children }) => (
-  <div className="bg-white p-6 rounded-lg shadow-sm border border-neutral-200" role="group" aria-label={`${title} Chart`}>
+  <div
+    className="bg-white p-6 rounded-lg shadow-sm border border-neutral-200"
+    role="group"
+    aria-label={`${title} Chart`}
+  >
     <h2 className="text-xl font-semibold text-neutral-800 mb-4">{title}</h2>
     {children}
   </div>
@@ -60,22 +72,21 @@ const Dashboard: React.FC = () => {
   return (
     <Container>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-        <img src={symbolLogo} alt="Frutas Prohibidas Symbol" style={{ width: '40px', marginRight: '10px' }} />
+        <img
+          src={symbolLogo}
+          alt="Frutas Prohibidas Symbol"
+          style={{ width: '40px', marginRight: '10px' }}
+        />
         <Typography variant="h4" component="h1">
           Frutas Prohibidas
         </Typography>
       </Box>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Welcome, {user?.name}!</h1>
-        
+
         {/* Top Metrics Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <MetricCard
-            title="Total Points"
-            value={metrics.totalPoints}
-            unit="points"
-            icon="🏆"
-          />
+          <MetricCard title="Total Points" value={metrics.totalPoints} unit="points" icon="🏆" />
           <MetricCard
             title="CO₂ Saved"
             value={metrics.sustainabilityMetrics.co2Saved}
@@ -101,7 +112,7 @@ const Dashboard: React.FC = () => {
           <ChartContainer title="Recent Receipts">
             {metrics.recentReceipts.length ? (
               <ul className="space-y-4">
-                {metrics.recentReceipts.map((receipt) => (
+                {metrics.recentReceipts.map(receipt => (
                   <li key={receipt.id} className="border-b pb-4">
                     <div className="flex justify-between items-start mb-2">
                       <div className="text-sm text-gray-500">
@@ -129,12 +140,10 @@ const Dashboard: React.FC = () => {
           <ChartContainer title="Recent Rewards">
             {metrics.recentRewards.length ? (
               <ul className="space-y-4">
-                {metrics.recentRewards.map((reward) => (
+                {metrics.recentRewards.map(reward => (
                   <li key={reward.id} className="border-b pb-4">
                     <div className="flex justify-between items-start mb-2">
-                      <div className="font-semibold text-neutral-800">
-                        {reward.name}
-                      </div>
+                      <div className="font-semibold text-neutral-800">{reward.name}</div>
                       <div className="text-sm text-gray-500">
                         {new Date(reward.redeemedAt).toLocaleDateString()}
                       </div>
@@ -153,4 +162,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

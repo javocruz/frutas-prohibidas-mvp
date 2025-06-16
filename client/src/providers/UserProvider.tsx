@@ -30,93 +30,60 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     receipts: [],
     rewards: [],
     loading: false,
-    error: null
+    error: null,
   });
 
-  const withLoadingAndError = useCallback(async <T,>(
-    operation: () => Promise<T>,
-    errorMessage: string
-  ): Promise<T> => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    try {
-      const result = await operation();
-      setState(prev => ({ ...prev, loading: false }));
-      return result;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : errorMessage;
-      setState(prev => ({ ...prev, loading: false, error: message }));
-      throw error;
-    }
-  }, []);
+  const withLoadingAndError = useCallback(
+    async <T,>(operation: () => Promise<T>, errorMessage: string): Promise<T> => {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      try {
+        const result = await operation();
+        setState(prev => ({ ...prev, loading: false }));
+        return result;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : errorMessage;
+        setState(prev => ({ ...prev, loading: false, error: message }));
+        throw error;
+      }
+    },
+    []
+  );
 
   const loadMetrics = useCallback(async () => {
     if (!user) return;
-    await withLoadingAndError(
-      async () => {
-        const metrics = await metricsService.getUserMetrics(user.id);
-        setState(prev => ({ ...prev, metrics }));
-      },
-      'Failed to load metrics'
-    );
+    await withLoadingAndError(async () => {
+      const metrics = await metricsService.getUserMetrics(user.id);
+      setState(prev => ({ ...prev, metrics }));
+    }, 'Failed to load metrics');
   }, [user, withLoadingAndError]);
 
   const loadReceipts = useCallback(async () => {
     if (!user) return;
-    await withLoadingAndError(
-      async () => {
-        const receipts = await receiptService.getUserReceipts(user.id);
-        setState(prev => ({ ...prev, receipts }));
-      },
-      'Failed to load receipts'
-    );
+    await withLoadingAndError(async () => {
+      const receipts = await receiptService.getUserReceipts(user.id);
+      setState(prev => ({ ...prev, receipts }));
+    }, 'Failed to load receipts');
   }, [user, withLoadingAndError]);
 
   const loadRewards = useCallback(async () => {
     if (!user) return;
-    await withLoadingAndError(
-      async () => {
-        const rewards = await rewardService.getAvailableRewards();
-        setState(prev => ({ ...prev, rewards }));
-      },
-      'Failed to load rewards'
-    );
+    await withLoadingAndError(async () => {
+      const rewards = await rewardService.getAvailableRewards();
+      setState(prev => ({ ...prev, rewards }));
+    }, 'Failed to load rewards');
   }, [user, withLoadingAndError]);
 
-  const handleRedeemReward = useCallback(async (rewardId: string) => {
-    if (!user) return;
-    await withLoadingAndError(
-      async () => {
+  const handleRedeemReward = useCallback(
+    async (rewardId: string) => {
+      if (!user) return;
+      await withLoadingAndError(async () => {
         await rewardService.redeemReward(user.id, rewardId);
         // Refresh rewards and metrics after redemption
         await Promise.all([loadRewards(), loadMetrics()]);
-      },
-      'Failed to redeem reward'
-    );
-  }, [user, withLoadingAndError, loadRewards, loadMetrics]);
-
-  const fetchUserData = useCallback(async () => {
-    if (!user) return;
-    try {
-      setState(prev => ({ ...prev, loading: true }));
-      const metrics = await metricsService.getUserMetrics(user.id);
-      setState(prev => ({ ...prev, metrics }));
-      // Fetch receipts and rewards here if needed
-      // For example:
-      // const receipts = await receiptsService.getUserReceipts(user.id);
-      // const rewards = await rewardsService.getUserRewards(user.id);
-      // setState(prev => ({ ...prev, receipts, rewards }));
-    } catch (error) {
-      setState({
-        metrics: null,
-        receipts: [],
-        rewards: [],
-        loading: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch user data',
-      });
-    } finally {
-      setState(prev => ({ ...prev, loading: false }));
-    }
-  }, [user]);
+      }, 'Failed to redeem reward');
+    },
+    [user, withLoadingAndError, loadRewards, loadMetrics]
+  );
 
   useEffect(() => {
     if (user) {
@@ -127,19 +94,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         receipts: [],
         rewards: [],
         loading: false,
-        error: null
+        error: null,
       });
     }
   }, [user, loadMetrics, loadReceipts, loadRewards]);
 
   return (
-    <UserContext.Provider value={{
-      ...state,
-    loadMetrics,
-    loadReceipts,
-    loadRewards,
-      handleRedeemReward
-    }}>
+    <UserContext.Provider
+      value={{
+        ...state,
+        loadMetrics,
+        loadReceipts,
+        loadRewards,
+        handleRedeemReward,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
@@ -151,4 +120,4 @@ export const useUser = () => {
     throw new Error('useUser must be used within a UserProvider');
   }
   return context;
-}; 
+};

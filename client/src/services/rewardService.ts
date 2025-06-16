@@ -3,7 +3,9 @@ import { Reward, ApiResponse, PaginatedResponse } from '../types';
 
 export const rewardService = {
   async getRewards(page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Reward>>> {
-    const response = await api.get<ApiResponse<PaginatedResponse<Reward>>>(`/rewards?page=${page}&limit=${limit}`);
+    const response = await api.get<ApiResponse<PaginatedResponse<Reward>>>(
+      `/rewards?page=${page}&limit=${limit}`
+    );
     return response.data;
   },
 
@@ -12,7 +14,9 @@ export const rewardService = {
     return response.data;
   },
 
-  async createReward(data: Omit<Reward, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Reward>> {
+  async createReward(
+    data: Omit<Reward, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<ApiResponse<Reward>> {
     const response = await api.post<ApiResponse<Reward>>('/rewards', data);
     return response.data;
   },
@@ -36,4 +40,4 @@ export const rewardService = {
     if (!response.ok) throw new Error('Failed to fetch rewards');
     return await response.json();
   },
-}; 
+};

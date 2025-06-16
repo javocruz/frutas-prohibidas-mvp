@@ -19,22 +19,22 @@ class ErrorBoundary extends Component<Props, State> {
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.setState({
-      errorInfo
+      errorInfo,
     });
-    
+
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     } else {
@@ -43,14 +43,11 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props): void {
-    if (
-      this.props.resetOnPropsChange &&
-      prevProps.children !== this.props.children
-    ) {
+    if (this.props.resetOnPropsChange && prevProps.children !== this.props.children) {
       this.setState({
         hasError: false,
         error: null,
-        errorInfo: null
+        errorInfo: null,
       });
     }
   }
@@ -59,7 +56,7 @@ class ErrorBoundary extends Component<Props, State> {
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
   };
 
@@ -74,7 +71,7 @@ class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div 
+        <div
           className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8"
           role="alert"
           aria-live="assertive"
@@ -116,4 +113,4 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-export default ErrorBoundary; 
+export default ErrorBoundary;

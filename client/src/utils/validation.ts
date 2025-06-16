@@ -77,7 +77,7 @@ export const isValidFileType = (file: File, allowedTypes: string[]): boolean => 
 export const isValidCreditCard = (cardNumber: string): boolean => {
   // Remove spaces and dashes
   const cleaned = cardNumber.replace(/[\s-]/g, '');
-  
+
   // Check if it's a number and has a valid length
   if (!/^\d+$/.test(cleaned) || cleaned.length < 13 || cleaned.length > 19) {
     return false;
@@ -119,4 +119,4 @@ export const isValidPostalCode = (postalCode: string): boolean => {
 export const isValidSSN = (ssn: string): boolean => {
   const ssnRegex = /^(?!000|666)[0-8][0-9]{2}-(?!00)[0-9]{2}-(?!0000)[0-9]{4}$/;
   return ssnRegex.test(ssn);
-}; 
+};

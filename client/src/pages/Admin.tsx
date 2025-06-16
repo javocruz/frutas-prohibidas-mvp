@@ -27,15 +27,12 @@ const Admin: React.FC = () => {
     }
     setLoading(true);
     setError(null);
-    Promise.all([
-      receiptService.getUserReceipts(userId),
-      rewardService.getAvailableRewards()
-    ])
+    Promise.all([receiptService.getUserReceipts(userId), rewardService.getAvailableRewards()])
       .then(([receiptsData, rewardsData]) => {
         setReceipts(Array.isArray(receiptsData) ? receiptsData : []);
         setRewards(Array.isArray(rewardsData) ? rewardsData : []);
       })
-      .catch((err) => setError(err.message || 'Failed to fetch admin data'))
+      .catch(err => setError(err.message || 'Failed to fetch admin data'))
       .finally(() => setLoading(false));
   }, [userId]);
 
@@ -54,7 +51,9 @@ const Admin: React.FC = () => {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-neutral-500">Total Points</p>
-              <p className="text-2xl font-bold">{receipts.reduce((total, receipt) => total + receipt.points_earned, 0)}</p>
+              <p className="text-2xl font-bold">
+                {receipts.reduce((total, receipt) => total + receipt.points_earned, 0)}
+              </p>
             </div>
             <div>
               <p className="text-sm text-neutral-500">Available Rewards</p>
@@ -82,15 +81,21 @@ const Admin: React.FC = () => {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-neutral-500">CO₂ Saved</p>
-              <p className="text-2xl font-bold">{receipts.reduce((total, receipt) => total + (receipt.total_co2_saved || 0), 0)} kg</p>
+              <p className="text-2xl font-bold">
+                {receipts.reduce((total, receipt) => total + (receipt.total_co2_saved || 0), 0)} kg
+              </p>
             </div>
             <div>
               <p className="text-sm text-neutral-500">Water Saved</p>
-              <p className="text-2xl font-bold">{receipts.reduce((total, receipt) => total + (receipt.total_water_saved || 0), 0)} L</p>
+              <p className="text-2xl font-bold">
+                {receipts.reduce((total, receipt) => total + (receipt.total_water_saved || 0), 0)} L
+              </p>
             </div>
             <div>
               <p className="text-sm text-neutral-500">Land Saved</p>
-              <p className="text-2xl font-bold">{receipts.reduce((total, receipt) => total + (receipt.total_land_saved || 0), 0)} m²</p>
+              <p className="text-2xl font-bold">
+                {receipts.reduce((total, receipt) => total + (receipt.total_land_saved || 0), 0)} m²
+              </p>
             </div>
           </div>
         </div>
@@ -101,21 +106,32 @@ const Admin: React.FC = () => {
           <div className="p-6">
             <h2 className="text-lg font-semibold mb-4">Recent Receipts</h2>
             <div className="space-y-4">
-              {(!receipts || receipts.length === 0) ? (
+              {!receipts || receipts.length === 0 ? (
                 <div>No receipts found.</div>
               ) : (
-                receipts.map((receipt) => (
-                  <div key={receipt.id} className="flex items-center justify-between border-b pb-4 last:border-0">
+                receipts.map(receipt => (
+                  <div
+                    key={receipt.id}
+                    className="flex items-center justify-between border-b pb-4 last:border-0"
+                  >
                     <div>
                       <p className="text-sm font-medium text-neutral-900">
-                        {receipt.points_earned !== undefined && receipt.points_earned !== null ? `${receipt.points_earned} pts` : 'N/A'}
+                        {receipt.points_earned !== undefined && receipt.points_earned !== null
+                          ? `${receipt.points_earned} pts`
+                          : 'N/A'}
                       </p>
                       <p className="text-xs text-neutral-500">
-                        {receipt.created_at ? new Date(receipt.created_at).toLocaleDateString() : 'N/A'}
+                        {receipt.created_at
+                          ? new Date(receipt.created_at).toLocaleDateString()
+                          : 'N/A'}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-neutral-500">{receipt.amount !== undefined && receipt.amount !== null ? `$${receipt.amount.toFixed(2)}` : 'N/A'}</span>
+                      <span className="text-sm text-neutral-500">
+                        {receipt.amount !== undefined && receipt.amount !== null
+                          ? `$${receipt.amount.toFixed(2)}`
+                          : 'N/A'}
+                      </span>
                     </div>
                   </div>
                 ))
@@ -128,20 +144,27 @@ const Admin: React.FC = () => {
           <div className="p-6">
             <h2 className="text-lg font-semibold mb-4">Available Rewards</h2>
             <div className="space-y-4">
-              {(!rewards || rewards.length === 0) ? (
+              {!rewards || rewards.length === 0 ? (
                 <div>No rewards found.</div>
               ) : (
-                rewards.map((reward) => (
-                  <div key={reward.id} className="flex items-center justify-between border-b pb-4 last:border-0">
+                rewards.map(reward => (
+                  <div
+                    key={reward.id}
+                    className="flex items-center justify-between border-b pb-4 last:border-0"
+                  >
                     <div>
                       <p className="text-sm font-medium text-neutral-900">{reward.name}</p>
                       <p className="text-xs text-neutral-500">{reward.description}</p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-neutral-500">{reward.points} pts</span>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        reward.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          reward.available
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
                         {reward.available ? 'Available' : 'Unavailable'}
                       </span>
                     </div>
@@ -156,4 +179,4 @@ const Admin: React.FC = () => {
   );
 };
 
-export default Admin; 
+export default Admin;
