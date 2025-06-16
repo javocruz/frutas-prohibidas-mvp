@@ -23,7 +23,10 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['users']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Insert: Omit<
+          Database['public']['Tables']['users']['Row'],
+          'id' | 'created_at' | 'updated_at'
+        >;
         Update: Partial<Database['public']['Tables']['users']['Insert']>;
       };
       receipts: {
@@ -37,7 +40,10 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['receipts']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Insert: Omit<
+          Database['public']['Tables']['receipts']['Row'],
+          'id' | 'created_at' | 'updated_at'
+        >;
         Update: Partial<Database['public']['Tables']['receipts']['Insert']>;
       };
       menu_items: {
@@ -56,7 +62,10 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['menu_items']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Insert: Omit<
+          Database['public']['Tables']['menu_items']['Row'],
+          'id' | 'created_at' | 'updated_at'
+        >;
         Update: Partial<Database['public']['Tables']['menu_items']['Insert']>;
       };
       rewards: {
@@ -70,9 +79,12 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['rewards']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Insert: Omit<
+          Database['public']['Tables']['rewards']['Row'],
+          'id' | 'created_at' | 'updated_at'
+        >;
         Update: Partial<Database['public']['Tables']['rewards']['Insert']>;
       };
     };
   };
-}; 
+};

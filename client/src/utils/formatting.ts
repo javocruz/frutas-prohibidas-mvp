@@ -1,4 +1,3 @@
-
 /**
  * Format a number as currency
  */
@@ -95,4 +94,4 @@ export const formatRelativeTime = (date: string | Date): string => {
   if (hours > 0) return `${hours}h ago`;
   if (minutes > 0) return `${minutes}m ago`;
   return 'just now';
-}; 
+};

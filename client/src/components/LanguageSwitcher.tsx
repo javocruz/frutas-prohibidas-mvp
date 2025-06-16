@@ -9,9 +9,7 @@ export const LanguageSwitcher: React.FC = () => {
       <button
         onClick={() => changeLanguage('en')}
         className={`px-3 py-1 rounded ${
-          language === 'en'
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 text-gray-700'
+          language === 'en' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
         }`}
       >
         EN
@@ -19,13 +17,11 @@ export const LanguageSwitcher: React.FC = () => {
       <button
         onClick={() => changeLanguage('es')}
         className={`px-3 py-1 rounded ${
-          language === 'es'
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 text-gray-700'
+          language === 'es' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
         }`}
       >
         ES
       </button>
     </div>
   );
-}; 
+};

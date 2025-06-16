@@ -115,4 +115,4 @@ export interface AuthContextType extends AuthState {
   logout: () => void;
   register: (email: string, password: string, name: string) => Promise<User>;
   checkAuth: () => Promise<User | null>;
-} 
+}

@@ -50,4 +50,4 @@ export const useUser = () => {
     ...state,
     fetchUserData,
   };
-}; 
+};

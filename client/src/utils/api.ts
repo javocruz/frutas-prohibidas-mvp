@@ -12,22 +12,22 @@ const api = axios.create({
 
 // Request interceptor
 api.interceptors.request.use(
-  (config) => {
+  config => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
+  error => {
     return Promise.reject(error);
   }
 );
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
+  response => response,
+  async error => {
     const originalRequest = error.config;
 
     // If the error is 401 and we haven't tried to refresh the token yet
@@ -65,4 +65,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api; 
+export default api;

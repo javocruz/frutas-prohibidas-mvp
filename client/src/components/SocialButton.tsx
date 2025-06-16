@@ -6,11 +6,7 @@ interface SocialButtonProps {
   className?: string;
 }
 
-const SocialButton: React.FC<SocialButtonProps> = ({ 
-  provider, 
-  onClick, 
-  className = '' 
-}) => {
+const SocialButton: React.FC<SocialButtonProps> = ({ provider, onClick, className = '' }) => {
   const getProviderIcon = () => {
     switch (provider) {
       case 'google':
@@ -65,4 +61,4 @@ const SocialButton: React.FC<SocialButtonProps> = ({
   );
 };
 
-export default SocialButton; 
+export default SocialButton;

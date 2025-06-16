@@ -15,16 +15,20 @@ export const authService = {
   async login(email: string, password: string): Promise<ApiResponse<LoginResponse>> {
     const response = await api.post<ApiResponse<LoginResponse>>('/auth/login', {
       email,
-      password
+      password,
     });
     return response.data;
   },
 
-  async register(email: string, password: string, name: string): Promise<ApiResponse<RegisterResponse>> {
+  async register(
+    email: string,
+    password: string,
+    name: string
+  ): Promise<ApiResponse<RegisterResponse>> {
     const response = await api.post<ApiResponse<RegisterResponse>>('/auth/register', {
       email,
       password,
-      name
+      name,
     });
     return response.data;
   },
@@ -47,5 +51,5 @@ export const authService = {
   async refreshUser(): Promise<ApiResponse<{ user: User }>> {
     const response = await api.get<ApiResponse<{ user: User }>>('/auth/me');
     return response.data;
-  }
-}; 
+  },
+};

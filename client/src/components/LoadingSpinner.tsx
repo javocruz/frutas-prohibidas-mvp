@@ -11,12 +11,12 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'md',
   fullScreen = false,
   text,
-  className = ''
+  className = '',
 }) => {
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-12 w-12',
-    lg: 'h-16 w-16'
+    lg: 'h-16 w-16',
   };
 
   const containerClasses = fullScreen
@@ -24,22 +24,20 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     : 'flex justify-center items-center h-32';
 
   return (
-    <div 
+    <div
       className={`${containerClasses} ${className}`}
       role="status"
       aria-label={text || 'Loading'}
     >
       <div className="flex flex-col items-center">
-        <div 
+        <div
           className={`animate-spin rounded-full border-b-2 border-brand ${sizeClasses[size]}`}
           aria-hidden="true"
         />
-        {text && (
-          <p className="mt-2 text-sm text-gray-600">{text}</p>
-        )}
+        {text && <p className="mt-2 text-sm text-gray-600">{text}</p>}
       </div>
     </div>
   );
 };
 
-export default LoadingSpinner; 
+export default LoadingSpinner;

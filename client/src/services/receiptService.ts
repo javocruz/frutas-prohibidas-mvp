@@ -3,7 +3,9 @@ import { Receipt, ApiResponse, PaginatedResponse } from '../types';
 
 export const receiptService = {
   async getReceipts(page = 1, limit = 10): Promise<ApiResponse<PaginatedResponse<Receipt>>> {
-    const response = await api.get<ApiResponse<PaginatedResponse<Receipt>>>(`/receipts?page=${page}&limit=${limit}`);
+    const response = await api.get<ApiResponse<PaginatedResponse<Receipt>>>(
+      `/receipts?page=${page}&limit=${limit}`
+    );
     return response.data;
   },
 
@@ -15,8 +17,8 @@ export const receiptService = {
   async createReceipt(data: FormData): Promise<ApiResponse<Receipt>> {
     const response = await api.post<ApiResponse<Receipt>>('/receipts', data, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return response.data;
   },
@@ -45,4 +47,4 @@ export const receiptService = {
     if (!response.ok) throw new Error('Failed to fetch receipts');
     return await response.json();
   },
-}; 
+};

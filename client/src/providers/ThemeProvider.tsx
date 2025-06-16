@@ -23,4 +23,4 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
     </MuiThemeProvider>
   );
-}; 
+};

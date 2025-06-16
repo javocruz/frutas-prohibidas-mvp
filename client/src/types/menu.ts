@@ -3,7 +3,7 @@ export interface MenuItem {
   category: string;
   name: string;
   sustainabilityMetrics: {
-    co2Saved: number;  // in kg
+    co2Saved: number; // in kg
     waterSaved: number; // in liters
     landSaved: number; // in m2
   };
@@ -13,4 +13,4 @@ export interface MenuItem {
 export interface MenuCategory {
   name: string;
   items: MenuItem[];
-} 
+}

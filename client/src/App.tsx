@@ -41,34 +41,34 @@ const App: React.FC = () => {
       <ThemeProvider>
         <AuthProvider>
           <UserProvider>
-      <Router>
-        <Routes>
+            <Router>
+              <Routes>
                 <Route path="/login" element={<Login />} />
-          <Route
+                <Route
                   path="/"
-            element={
-              <ProtectedRoute>
+                  element={
+                    <ProtectedRoute>
                       <Layout>
                         <Outlet />
                       </Layout>
-              </ProtectedRoute>
-            }
+                    </ProtectedRoute>
+                  }
                 >
                   <Route index element={<Navigate to="/dashboard" replace />} />
                   <Route path="dashboard" element={<Dashboard />} />
                   <Route path="rewards" element={<Rewards />} />
                   <Route path="receipts" element={<Receipts />} />
-          <Route
+                  <Route
                     path="admin"
-            element={
-              <ProtectedRoute requireAdmin>
-                <Admin />
-              </ProtectedRoute>
-            }
-          />
+                    element={
+                      <ProtectedRoute requireAdmin>
+                        <Admin />
+                      </ProtectedRoute>
+                    }
+                  />
                 </Route>
-        </Routes>
-      </Router>
+              </Routes>
+            </Router>
           </UserProvider>
         </AuthProvider>
       </ThemeProvider>
@@ -76,4 +76,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App; 
+export default App;

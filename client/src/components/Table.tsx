@@ -18,14 +18,14 @@ interface TableProps<T> {
   error?: string | null;
 }
 
-function Table<T extends { id: string | number }>({ 
-  columns, 
-  data, 
+function Table<T extends { id: string | number }>({
+  columns,
+  data,
   onRowClick,
   className = '',
   emptyMessage = 'No data available',
   loading = false,
-  error = null
+  error = null,
 }: TableProps<T>) {
   if (loading) {
     return (
@@ -69,14 +69,14 @@ function Table<T extends { id: string | number }>({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((item) => (
+          {data.map(item => (
             <tr
               key={item.id}
               onClick={() => onRowClick?.(item)}
               className={`${onRowClick ? 'cursor-pointer hover:bg-gray-50 focus:bg-gray-50 focus:outline-none' : ''}`}
               tabIndex={onRowClick ? 0 : undefined}
               role={onRowClick ? 'button' : undefined}
-              onKeyPress={(e) => {
+              onKeyPress={e => {
                 if (onRowClick && (e.key === 'Enter' || e.key === ' ')) {
                   e.preventDefault();
                   onRowClick(item);
@@ -101,4 +101,4 @@ function Table<T extends { id: string | number }>({
   );
 }
 
-export default Table; 
+export default Table;
