@@ -14,7 +14,9 @@ const redeemSchema = z.object({
 // Get all rewards
 router.get('/', async (req, res) => {
   try {
-    const rewards = await prisma.rewards.findMany();
+    const rewards = await prisma.rewards.findMany({
+      where: { available: true }
+    });
     res.json(rewards);
   } catch (error) {
     logger.error('Error fetching rewards:', error);
