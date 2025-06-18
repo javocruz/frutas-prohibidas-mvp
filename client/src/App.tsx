@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import Rewards from './pages/Rewards';
 import Receipts from './pages/Receipts';
 import Admin from './pages/Admin';
+import Profile from './pages/Profile';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -58,6 +59,7 @@ const App: React.FC = () => {
                   <Route path="dashboard" element={<Dashboard />} />
                   <Route path="rewards" element={<Rewards />} />
                   <Route path="receipts" element={<Receipts />} />
+                  <Route path="profile" element={<Profile />} />
                   <Route
                     path="admin"
                     element={
