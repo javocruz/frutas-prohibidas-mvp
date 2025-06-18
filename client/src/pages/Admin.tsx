@@ -3,6 +3,10 @@ import { useAuthContext } from '../providers/AuthProvider';
 import { receiptService } from '../services/receiptService';
 import { rewardService } from '../services/rewardService';
 import { Receipt, Reward } from '../types';
+import { api } from '../lib/api';
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
 
 // TODO: Only allow access to users with admin role (already handled by ProtectedRoute in App.tsx)
 // TODO: Add functionality to:
@@ -11,13 +15,14 @@ import { Receipt, Reward } from '../types';
 //   - Manage and view metrics
 //   - Admin dashboard features
 
-const Admin: React.FC = () => {
+const AdminAnalytics: React.FC = () => {
   const { user } = useAuthContext();
   const userId = user?.id;
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<any>(null);
 
   useEffect(() => {
     if (!userId) {
@@ -36,139 +41,171 @@ const Admin: React.FC = () => {
       .finally(() => setLoading(false));
   }, [userId]);
 
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await api.get('/metrics/admin-analytics');
+        if (response.data.success) {
+          setAnalytics(response.data.data);
+        } else {
+          setError('Failed to fetch analytics');
+        }
+      } catch (err) {
+        setError('Failed to fetch analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, []);
+
   if (loading) return <div>Loading admin data...</div>;
   if (error) return <div>Error: {error}</div>;
+  if (!analytics) return <div>No analytics data available.</div>;
+
+  const { kpis, salesByDay, topItems, leastItems, categoryBreakdown, issuedVsRedeemed, engagement, hourlyCounts } = analytics;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold">Admin Analytics</h1>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold mb-4">Points & Rewards</h2>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-neutral-500">Total Points</p>
-              <p className="text-2xl font-bold">
-                {receipts.reduce((total, receipt) => total + receipt.points_earned, 0)}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-neutral-500">Available Rewards</p>
-              <p className="text-2xl font-bold">{rewards.length}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold mb-4">Receipt Status</h2>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-neutral-500">Pending Receipts</p>
-              <p className="text-2xl font-bold">N/A</p>
-            </div>
-            <div>
-              <p className="text-sm text-neutral-500">Recent Receipts</p>
-              <p className="text-2xl font-bold">{receipts.length}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold mb-4">Sustainability Impact</h2>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-neutral-500">CO₂ Saved</p>
-              <p className="text-2xl font-bold">
-                {receipts.reduce((total, receipt) => total + Number(receipt.total_co2_saved || 0), 0).toFixed(2)} kg
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-neutral-500">Water Saved</p>
-              <p className="text-2xl font-bold">
-                {receipts.reduce((total, receipt) => total + Number(receipt.total_water_saved || 0), 0)} L
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-neutral-500">Land Saved</p>
-              <p className="text-2xl font-bold">
-                {receipts.reduce((total, receipt) => total + Number(receipt.total_land_saved || 0), 0).toFixed(2)} m²
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+        <KpiCard label="Total Receipts Issued" value={kpis.totalReceipts} />
+        <KpiCard label="Total Codes Redeemed" value={kpis.totalCodesRedeemed} />
+        <KpiCard label="Redemption Rate (%)" value={kpis.redemptionRate} />
+        <KpiCard label="Active Users (30d)" value={kpis.activeUsers} />
+        <KpiCard label="New Users (30d)" value={kpis.newUsers} />
+        <KpiCard label="Total Points Awarded" value={kpis.totalPointsAwarded} />
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Recent Receipts</h2>
-            <div className="space-y-4">
-              {!receipts || receipts.length === 0 ? (
-                <div>No receipts found.</div>
-              ) : (
-                receipts.map(receipt => (
-                  <div
-                    key={receipt.id}
-                    className="flex items-center justify-between border-b pb-4 last:border-0"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900">
-                        {receipt.points_earned !== undefined && receipt.points_earned !== null
-                          ? `${receipt.points_earned} pts`
-                          : 'N/A'}
-                      </p>
-                      <p className="text-xs text-neutral-500">
-                        {receipt.created_at
-                          ? new Date(receipt.created_at).toLocaleDateString()
-                          : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Daily Sales Line Chart */}
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+          <h2 className="text-lg font-semibold mb-4">Daily Sales (Last 30 Days)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={salesByDay} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="count" stroke="#8884d8" name="Receipts" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        {/* Category Breakdown Pie Chart */}
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+          <h2 className="text-lg font-semibold mb-4">Category Breakdown</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={categoryBreakdown}
+                dataKey="count"
+                nameKey="category"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                fill="#8884d8"
+                label={({ category, percent }) => `${category}: ${(percent * 100).toFixed(0)}%`}
+              >
+                {categoryBreakdown.map((entry: { category: string; count: number }, index: number) => (
+                  <Cell key={`cell-${index}`} fill={['#8884d8', '#82ca9d', '#ffc658', '#f87171', '#a78bfa', '#fbbf24', '#34d399', '#f472b6', '#60a5fa', '#facc15'][index % 10]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        {/* Top 10 and Least 10 Sold Items Side by Side */}
+        <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Top 10 Most Sold Items Bar Chart */}
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+            <h2 className="text-lg font-semibold mb-4">Top 10 Most Sold Items</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={topItems} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" fill="#82ca9d" name="Units Sold" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Least 10 Sold Items Bar Chart */}
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+            <h2 className="text-lg font-semibold mb-4">Least 10 Sold Items</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={leastItems} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" fill="#f87171" name="Units Sold" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Available Rewards</h2>
-            <div className="space-y-4">
-              {!rewards || rewards.length === 0 ? (
-                <div>No rewards found.</div>
-              ) : (
-                rewards.map(reward => (
-                  <div
-                    key={reward.id}
-                    className="flex items-center justify-between border-b pb-4 last:border-0"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900">{reward.name}</p>
-                      <p className="text-xs text-neutral-500">{reward.description}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          reward.available
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {reward.available ? 'Available' : 'Unavailable'}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+        {/* Issued vs. Redeemed Dual-Bar Chart */}
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+          <h2 className="text-lg font-semibold mb-4">Issued vs. Redeemed (Last 12 Weeks)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={issuedVsRedeemed} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="week" tick={{ fontSize: 12 }} />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="issued" fill="#8884d8" name="Issued" />
+              <Bar dataKey="redeemed" fill="#82ca9d" name="Redeemed" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        {/* Monthly Engagement Line Chart */}
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+          <h2 className="text-lg font-semibold mb-4">Monthly Engagement (Last 6 Months)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={engagement} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="users" stroke="#8884d8" name="Unique Users" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        {/* Hourly Peak Times Chart */}
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 lg:col-span-2">
+          <h2 className="text-lg font-semibold mb-4">Hourly Peak Times (Avg Receipts by Hour)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={hourlyCounts} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="hour" tick={{ fontSize: 12 }} />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="avg" fill="#8884d8" name="Avg Receipts" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
   );
 };
 
-export default Admin;
+// KPI Card Component
+const KpiCard: React.FC<{ label: string; value: number }> = ({ label, value }) => (
+  <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 flex flex-col items-center justify-center">
+    <div className="text-2xl font-bold text-brand mb-2">{value}</div>
+    <div className="text-sm text-gray-600 text-center">{label}</div>
+  </div>
+);
+
+export default AdminAnalytics;
