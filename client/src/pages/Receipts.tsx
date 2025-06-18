@@ -10,6 +10,10 @@ const Receipts: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedReceiptId, setExpandedReceiptId] = useState<string | null>(null);
+  const [receiptCode, setReceiptCode] = useState('');
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [claimSuccess, setClaimSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) {
@@ -17,14 +21,59 @@ const Receipts: React.FC = () => {
       setLoading(false);
       return;
     }
+    loadReceipts();
+  }, [userId]);
+
+  const loadReceipts = async () => {
     setLoading(true);
     setError(null);
-    receiptService
-      .getUserReceipts(userId)
-      .then(data => setReceipts(Array.isArray(data) ? data : []))
-      .catch(err => setError(err.message || 'Failed to fetch receipts'))
-      .finally(() => setLoading(false));
-  }, [userId]);
+    try {
+      const data = await receiptService.getUserReceipts(userId!);
+      setReceipts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch receipts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClaimReceipt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!receiptCode.trim()) {
+      setClaimError('Please enter a receipt code');
+      return;
+    }
+
+    setIsClaiming(true);
+    setClaimError(null);
+    setClaimSuccess(null);
+
+    try {
+      const response = await fetch('/api/receipts/claim', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          receipt_code: receiptCode.trim(),
+          user_id: userId,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to claim receipt');
+      }
+
+      setClaimSuccess('Receipt claimed successfully!');
+      setReceiptCode('');
+      loadReceipts(); // Reload receipts to show the new one
+    } catch (err) {
+      setClaimError(err instanceof Error ? err.message : 'Failed to claim receipt');
+    } finally {
+      setIsClaiming(false);
+    }
+  };
 
   const toggleReceipt = (receiptId: string) => {
     setExpandedReceiptId(expandedReceiptId === receiptId ? null : receiptId);
@@ -32,123 +81,136 @@ const Receipts: React.FC = () => {
 
   const formatDecimal = (value: unknown) => {
     if (value === null || value === undefined) return 'N/A';
-    // Convert to number if it's a Decimal or string
     const num = typeof value === 'string' ? parseFloat(value) : Number(value);
     return isNaN(num) ? 'N/A' : num.toFixed(2);
   };
 
   if (loading) return <div>Loading receipts...</div>;
   if (error) return <div>Error: {error}</div>;
-  if (!receipts || receipts.length === 0) return <div>No receipts found.</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Receipts</h1>
-        <button className="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-dark transition-colors duration-300">
-          Upload Receipt
-        </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-neutral-200">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Total Points
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Eco Impact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Details
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-neutral-200">
-              {receipts.map(receipt => (
-                <React.Fragment key={receipt.id}>
-                  <tr className="hover:bg-neutral-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
-                      {receipt.created_at
-                        ? new Date(receipt.created_at).toLocaleDateString()
-                        : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
-                      {receipt.points_earned !== undefined && receipt.points_earned !== null
-                        ? `${receipt.points_earned} points`
-                        : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
-                      <div className="space-y-1">
-                        <div>CO₂: {formatDecimal(receipt.total_co2_saved)} kg</div>
-                        <div>Water: {formatDecimal(receipt.total_water_saved)} L</div>
-                        <div>Land: {formatDecimal(receipt.total_land_saved)} m²</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
-                      <button
-                        onClick={() => toggleReceipt(receipt.id)}
-                        className="text-brand hover:text-brand-dark"
-                      >
-                        {expandedReceiptId === receipt.id ? 'Hide' : 'Show'} Items
-                      </button>
-                    </td>
-                  </tr>
-                  {expandedReceiptId === receipt.id && receipt.receipt_items && (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-4 bg-neutral-50">
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-neutral-900">Ordered Items:</h4>
+      {/* Claim Receipt Form */}
+      <div className="mb-8 bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+        <h2 className="text-xl font-semibold mb-4">Claim a Receipt</h2>
+        <form onSubmit={handleClaimReceipt} className="space-y-4">
+          <div>
+            <label htmlFor="receiptCode" className="block text-sm font-medium text-gray-700 mb-1">
+              Enter Receipt Code
+            </label>
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                id="receiptCode"
+                value={receiptCode}
+                onChange={(e) => setReceiptCode(e.target.value.toUpperCase())}
+                placeholder="e.g., AB123456"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-brand focus:border-brand"
+                maxLength={8}
+                pattern="[A-Z]{2}[0-9]{6}"
+                title="Enter an 8-character code (2 letters followed by 6 numbers)"
+              />
+              <button
+                type="submit"
+                disabled={isClaiming || !receiptCode.trim()}
+                className="px-4 py-2 bg-brand text-white rounded-md hover:bg-brand-dark disabled:opacity-50 transition-colors duration-300"
+              >
+                {isClaiming ? 'Claiming...' : 'Claim Receipt'}
+              </button>
+            </div>
+          </div>
+          {claimError && (
+            <div className="text-red-600 text-sm">{claimError}</div>
+          )}
+          {claimSuccess && (
+            <div className="text-green-600 text-sm">{claimSuccess}</div>
+          )}
+        </form>
+      </div>
+
+      {/* Receipts List */}
+      {receipts.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          No receipts found. Claim a receipt using the form above.
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-200">
+              <thead className="bg-neutral-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    Total Points
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    Eco Impact
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    Details
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-neutral-200">
+                {receipts.map((receipt) => (
+                  <React.Fragment key={receipt.id}>
+                    <tr
+                      onClick={() => toggleReceipt(receipt.id)}
+                      className="hover:bg-neutral-50 cursor-pointer"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                        {new Date(receipt.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                        {receipt.points_earned} points
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                        <div className="space-y-1">
+                          <div>CO₂: {formatDecimal(receipt.total_co2_saved)} kg</div>
+                          <div>Water: {formatDecimal(receipt.total_water_saved)} L</div>
+                          <div>Land: {formatDecimal(receipt.total_land_saved)} m²</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                        <button className="text-brand hover:text-brand-dark">
+                          {expandedReceiptId === receipt.id ? 'Hide' : 'Show'} Details
+                        </button>
+                      </td>
+                    </tr>
+                    {expandedReceiptId === receipt.id && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-4 bg-neutral-50">
                           <div className="space-y-2">
-                            {receipt.receipt_items.map(item => (
-                              <div
-                                key={item.id}
-                                className="flex justify-between items-center p-3 bg-white rounded-md shadow-sm"
-                              >
-                                <div>
-                                  <div className="font-medium">{item.menu_items.name}</div>
-                                  <div className="text-sm text-neutral-500">
-                                    Quantity: {item.quantity}
-                                  </div>
-                                </div>
-                                <div className="text-right space-y-1">
-                                  <div className="text-sm">
-                                    <span className="font-medium">Category:</span>{' '}
-                                    {item.menu_items.category}
-                                  </div>
-                                  <div className="text-xs text-neutral-500">
-                                    <div>
-                                      CO₂:{' '}
-                                      {formatDecimal(item.menu_items.co2_saved * item.quantity)} kg
-                                    </div>
-                                    <div>
-                                      Water:{' '}
-                                      {formatDecimal(item.menu_items.water_saved * item.quantity)} L
-                                    </div>
-                                    <div>
-                                      Land:{' '}
-                                      {formatDecimal(item.menu_items.land_saved * item.quantity)} m²
-                                    </div>
-                                  </div>
-                                </div>
+                            <h4 className="font-medium">Items:</h4>
+                            {receipt.receipt_items?.map((item) => (
+                              <div key={item.id} className="flex justify-between text-sm">
+                                <span>
+                                  {item.quantity}x {item.menu_items?.name}
+                                </span>
+                                <span className="text-neutral-500">
+                                  CO₂: {formatDecimal(item.menu_items?.co2_saved)} kg | 
+                                  Water: {formatDecimal(item.menu_items?.water_saved)} L | 
+                                  Land: {formatDecimal(item.menu_items?.land_saved)} m²
+                                </span>
                               </div>
                             ))}
                           </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

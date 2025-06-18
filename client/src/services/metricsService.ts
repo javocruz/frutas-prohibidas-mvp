@@ -7,10 +7,28 @@ export const metricsService = {
     return response.data;
   },
 
-  getUserMetrics: async (userId: string) => {
-    const response = await fetch(`/api/metrics/user/${userId}`);
-    if (!response.ok) throw new Error('Failed to fetch metrics');
-    return await response.json();
+  getUserMetrics: async (userId: string): Promise<Metrics> => {
+    try {
+      const response = await api.get(`/metrics/user/${userId}`);
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to fetch user metrics');
+      }
+
+      const data = response.data.data;
+      return {
+        totalPoints: data.totalPointsEarned,
+        sustainabilityMetrics: {
+          co2Saved: Number(data.totalCo2Saved),
+          waterSaved: Number(data.totalWaterSaved),
+          landSaved: Number(data.totalLandSaved)
+        },
+        recentReceipts: data.recentReceipts || [],
+        recentRewards: data.recentRewards || []
+      };
+    } catch (error) {
+      console.error('Error fetching user metrics:', error);
+      throw new Error('Failed to fetch user metrics');
+    }
   },
 
   async getGlobalMetrics(): Promise<ApiResponse<Metrics>> {

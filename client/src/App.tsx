@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Rewards from './pages/Rewards';
 import Receipts from './pages/Receipts';
+import ReceiptsMaker from './pages/ReceiptsMaker';
 import Admin from './pages/Admin';
 import Profile from './pages/Profile';
 import Layout from './components/Layout';
@@ -65,6 +66,14 @@ const App: React.FC = () => {
                     element={
                       <ProtectedRoute requireAdmin>
                         <Admin />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="receipts-maker"
+                    element={
+                      <ProtectedRoute requireAdmin>
+                        <ReceiptsMaker />
                       </ProtectedRoute>
                     }
                   />

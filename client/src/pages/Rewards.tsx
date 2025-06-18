@@ -1,30 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../hooks/useUser';
-import { Reward } from '../types/Reward';
+import { useAuthContext } from '../providers/AuthProvider';
+import { Reward } from '../types';
 import { rewardService } from '../services/RewardService';
 
 const Rewards: React.FC = () => {
+  const { user } = useAuthContext();
   const { metrics, loading: userLoading, error: userError } = useUser();
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    rewardService
-      .getAvailableRewards()
-      .then(data => setRewards(Array.isArray(data) ? data : []))
-      .catch(err => setError(err.message || 'Failed to fetch rewards'))
-      .finally(() => setLoading(false));
+    const fetchRewards = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await rewardService.getAvailableRewards();
+        setRewards(Array.isArray(response) ? response : []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch rewards');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRewards();
   }, []);
 
   const handleRedeem = async (rewardId: string) => {
+    if (!user) {
+      setError('You must be logged in to redeem rewards');
+      return;
+    }
+
     try {
-      await rewardService.redeemReward(metrics?.userId, rewardId);
-      // Optionally refresh the rewards list or user metrics
+      await rewardService.redeemReward(user.id, rewardId);
+      // Refresh the rewards list
+      const response = await rewardService.getAvailableRewards();
+      setRewards(Array.isArray(response) ? response : []);
     } catch (err) {
-      setError(err.message || 'Failed to redeem reward');
+      setError(err instanceof Error ? err.message : 'Failed to redeem reward');
     }
   };
 
@@ -45,15 +61,27 @@ const Rewards: React.FC = () => {
   }
 
   if (loading) {
-    return <div>Loading rewards...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
   }
 
   if (!rewards || rewards.length === 0) {
-    return <div>No rewards found.</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-neutral-600">No rewards available at the moment.</div>
+      </div>
+    );
   }
 
   return (
@@ -77,12 +105,14 @@ const Rewards: React.FC = () => {
               className={`w-full py-2 px-4 rounded-md transition-colors duration-300 ${
                 metrics?.totalPoints >= reward.points_required
                   ? 'bg-green-500 text-white hover:bg-green-600'
-                  : 'bg-red-500 text-white hover:bg-red-600'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
-              disabled={metrics?.totalPoints < reward.points_required}
+              disabled={!metrics || metrics.totalPoints < reward.points_required}
               onClick={() => handleRedeem(reward.id)}
             >
-              {metrics?.totalPoints >= reward.points_required
+              {!metrics
+                ? 'Loading...'
+                : metrics.totalPoints >= reward.points_required
                 ? 'Redeem Reward'
                 : 'Not Enough Points'}
             </button>

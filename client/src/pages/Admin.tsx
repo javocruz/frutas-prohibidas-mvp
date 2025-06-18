@@ -82,19 +82,19 @@ const Admin: React.FC = () => {
             <div>
               <p className="text-sm text-neutral-500">CO₂ Saved</p>
               <p className="text-2xl font-bold">
-                {receipts.reduce((total, receipt) => total + (receipt.total_co2_saved || 0), 0)} kg
+                {receipts.reduce((total, receipt) => total + Number(receipt.total_co2_saved || 0), 0).toFixed(2)} kg
               </p>
             </div>
             <div>
               <p className="text-sm text-neutral-500">Water Saved</p>
               <p className="text-2xl font-bold">
-                {receipts.reduce((total, receipt) => total + (receipt.total_water_saved || 0), 0)} L
+                {receipts.reduce((total, receipt) => total + Number(receipt.total_water_saved || 0), 0)} L
               </p>
             </div>
             <div>
               <p className="text-sm text-neutral-500">Land Saved</p>
               <p className="text-2xl font-bold">
-                {receipts.reduce((total, receipt) => total + (receipt.total_land_saved || 0), 0)} m²
+                {receipts.reduce((total, receipt) => total + Number(receipt.total_land_saved || 0), 0).toFixed(2)} m²
               </p>
             </div>
           </div>
@@ -126,13 +126,6 @@ const Admin: React.FC = () => {
                           : 'N/A'}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-neutral-500">
-                        {receipt.amount !== undefined && receipt.amount !== null
-                          ? `$${receipt.amount.toFixed(2)}`
-                          : 'N/A'}
-                      </span>
-                    </div>
                   </div>
                 ))
               )}
@@ -157,7 +150,6 @@ const Admin: React.FC = () => {
                       <p className="text-xs text-neutral-500">{reward.description}</p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-neutral-500">{reward.points} pts</span>
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
                           reward.available
