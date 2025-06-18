@@ -28,7 +28,10 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, unit, icon }) => 
     </div>
     <div className="text-xl font-semibold text-neutral-800 mb-1">{title}</div>
     <div className="text-4xl font-bold text-brand">
-      {value.toFixed(2)} {unit}
+      {title === 'Water Saved' || title === 'Total Points'
+        ? Math.round(value)
+        : Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      {' '}{unit}
     </div>
   </div>
 );

@@ -36,6 +36,7 @@ export interface ReceiptItem {
 
 export interface Receipt {
   id: string;
+  receipt_code: string;
   user_id: string;
   total_co2_saved: number;
   total_water_saved: number;
