@@ -1,23 +1,23 @@
-import { Router } from 'express';
+import express from 'express';
 import { logger } from '../utils/logger';
 import { ApiError } from '../utils/ApiError';
 import { getAllReceipts } from '../services/dataService';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
+import { generateReceiptCode } from '../utils/receiptCode';
+import { Request, Response } from 'express';
 
-const router = Router();
+const router = express.Router();
 
 // Validation schema for receipt items
 const receiptItemSchema = z.object({
   menu_item_id: z.number(),
-  quantity: z.number().int().positive(),
+  quantity: z.number().min(1).max(99),
 });
 
 // Validation schema for creating a receipt
 const createReceiptSchema = z.object({
-  user_id: z.string().uuid(),
-  items: z.array(receiptItemSchema),
-  image_url: z.string().optional(),
+  items: z.array(receiptItemSchema).min(1),
 });
 
 // Calculate points based on environmental impact
@@ -35,48 +35,88 @@ const calculatePoints = (co2Saved: number, waterSaved: number, landSaved: number
 };
 
 // Create a new receipt
-router.post('/', async (req, res) => {
+router.post('/finalize', async (req: Request, res: Response) => {
   try {
-    const validation = createReceiptSchema.safeParse(req.body);
-    if (!validation.success) {
-      throw new ApiError('Invalid receipt data', 400, 'INVALID_RECEIPT_DATA');
+    // Validate request body
+    const validationResult = createReceiptSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        error: 'Invalid request data',
+        details: validationResult.error.errors,
+      });
     }
 
-    const { user_id, items, image_url } = validation.data;
+    const { items } = validationResult.data;
 
-    // Start a transaction to ensure data consistency
-    const result = await prisma.$transaction(async (tx) => {
-      let totalCo2Saved = 0;
-      let totalWaterSaved = 0;
-      let totalLandSaved = 0;
+    // Validate menu items exist and get their details
+    const menuItemIds = items.map(item => item.menu_item_id);
+    const existingItems = await prisma.menu_items.findMany({
+      where: { id: { in: menuItemIds } }
+    });
 
-      // Calculate totals and validate menu items
-      for (const item of items) {
-        const menuItem = await tx.menu_items.findUnique({
-          where: { id: item.menu_item_id },
-        });
+    if (existingItems.length !== menuItemIds.length) {
+      const missingIds = menuItemIds.filter(
+        id => !existingItems.some(item => item.id === id)
+      );
+      return res.status(400).json({
+        error: 'One or more menu items not found',
+        missingItems: missingIds,
+      });
+    }
 
-        if (!menuItem) {
-          throw new ApiError(`Menu item ${item.menu_item_id} not found`, 404, 'MENU_ITEM_NOT_FOUND');
-        }
+    // Check for duplicate menu items
+    const uniqueItems = new Set(items.map(item => item.menu_item_id));
+    if (uniqueItems.size !== items.length) {
+      return res.status(400).json({
+        error: 'Duplicate menu items are not allowed',
+      });
+    }
 
-        totalCo2Saved += Number(menuItem.co2_saved) * item.quantity;
-        totalWaterSaved += menuItem.water_saved * item.quantity;
-        totalLandSaved += Number(menuItem.land_saved) * item.quantity;
-      }
+    // Generate a unique receipt code with retry logic
+    let receipt_code;
+    let attempts = 0;
+    const maxAttempts = 3;
 
-      // Calculate points based on environmental impact
-      const pointsEarned = calculatePoints(totalCo2Saved, totalWaterSaved, totalLandSaved);
+    while (attempts < maxAttempts) {
+      receipt_code = await generateReceiptCode();
+      const existingReceipt = await prisma.receipts.findUnique({
+        where: { receipt_code },
+      });
+      if (!existingReceipt) break;
+      attempts++;
+    }
 
+    if (!receipt_code) {
+      throw new Error('Failed to generate unique receipt code');
+    }
+
+    // Calculate totals and points
+    const totals = items.reduce(
+      (acc, item) => {
+        const menuItem = existingItems.find(mi => mi.id === item.menu_item_id);
+        if (!menuItem) return acc;
+        return {
+          co2: acc.co2 + (Number(menuItem.co2_saved) * item.quantity),
+          water: acc.water + (menuItem.water_saved * item.quantity),
+          land: acc.land + (Number(menuItem.land_saved) * item.quantity),
+        };
+      },
+      { co2: 0, water: 0, land: 0 }
+    );
+
+    const points_earned = calculatePoints(totals.co2, totals.water, totals.land);
+
+    // Create the receipt with items in a transaction
+    const receipt = await prisma.$transaction(async (tx) => {
       // Create the receipt
-      const receipt = await tx.receipts.create({
+      const newReceipt = await tx.receipts.create({
         data: {
-          user_id,
-          total_co2_saved: totalCo2Saved,
-          total_water_saved: totalWaterSaved,
-          total_land_saved: totalLandSaved,
-          points_earned: pointsEarned,
-          image_url,
+          receipt_code,
+          total_co2_saved: Number(totals.co2),
+          total_water_saved: Number(totals.water),
+          total_land_saved: Number(totals.land),
+          points_earned,
+          created_at: new Date(),
           receipt_items: {
             create: items.map(item => ({
               menu_item_id: item.menu_item_id,
@@ -93,68 +133,93 @@ router.post('/', async (req, res) => {
         },
       });
 
-      // Update user's total points
-      await tx.users.update({
-        where: { id: user_id },
-        data: {
-          points: {
-            increment: pointsEarned,
-          },
-        },
-      });
-
-      return receipt;
+      return newReceipt;
     });
 
-    res.json(result);
+    res.json({
+      receipt_code: receipt.receipt_code,
+      points_earned: receipt.points_earned,
+      created_at: receipt.created_at,
+      total_co2_saved: receipt.total_co2_saved,
+      total_water_saved: receipt.total_water_saved,
+      total_land_saved: receipt.total_land_saved,
+    });
   } catch (error) {
-    if (error instanceof ApiError) throw error;
-    logger.error('Error creating receipt:', error);
-    throw new ApiError('Failed to create receipt', 500, 'CREATE_RECEIPT_ERROR');
+    console.error('Error creating receipt:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.errors,
+      });
+    }
+    res.status(500).json({
+      error: 'Failed to create receipt',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 });
 
 // Get all receipts
-router.get('/', (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const receipts = getAllReceipts();
-    res.json({ success: true, data: receipts });
-  } catch (error) {
-    logger.error('Error fetching receipts:', error);
-    throw new ApiError('Failed to fetch receipts', 500, 'FETCH_RECEIPTS_ERROR');
-  }
-});
-
-// Get a receipt by ID with its items and menu item details
-router.get('/:id', async (req, res) => {
-  try {
-    const receipt = await prisma.receipts.findUnique({
-      where: { id: req.params.id },
+    const receipts = await prisma.receipts.findMany({
       include: {
         receipt_items: {
           include: {
             menu_items: true,
           },
         },
-        users: true,
+      },
+      orderBy: {
+        created_at: 'desc',
       },
     });
+    res.json(receipts);
+  } catch (error) {
+    logger.error('Error fetching receipts:', error);
+    res.status(500).json({ error: 'Failed to fetch receipts' });
+  }
+});
+
+// Get a receipt by ID
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const receipt = await prisma.receipts.findUnique({
+      where: { id: parseInt(req.params.id) },
+      include: {
+        receipt_items: {
+          include: {
+            menu_items: true,
+          },
+        },
+      },
+    });
+
     if (!receipt) {
       return res.status(404).json({ error: 'Receipt not found' });
     }
+
     res.json(receipt);
   } catch (error) {
-    console.error('Error fetching receipt:', error);
+    logger.error('Error fetching receipt:', error);
     res.status(500).json({ error: 'Failed to fetch receipt' });
   }
 });
 
-// Get all receipts for a user, including items and menu item details
-router.get('/user/:userId', async (req, res) => {
+// Claim a receipt by code
+router.post('/claim', async (req: Request, res: Response) => {
   try {
-    const receipts = await prisma.receipts.findMany({
-      where: { 
-        user_id: req.params.userId
+    const { receipt_code, user_id } = req.body;
+
+    if (!receipt_code || !user_id) {
+      return res.status(400).json({ error: 'Receipt code and user ID are required' });
+    }
+
+    // Find the receipt by code
+    const receipt = await prisma.receipts.findFirst({
+      where: {
+        receipt_code,
+        user_id: null, // Only unclaimed receipts
       },
       include: {
         receipt_items: {
@@ -162,17 +227,93 @@ router.get('/user/:userId', async (req, res) => {
             menu_items: true,
           },
         },
-        users: true,
       },
-      orderBy: { created_at: 'desc' },
+    });
+
+    if (!receipt) {
+      return res.status(404).json({ error: 'Receipt not found or already claimed' });
+    }
+
+    // Update the receipt with the user ID and update user points
+    const updatedReceipt = await prisma.$transaction(async (tx) => {
+      // Update the receipt
+      const updatedReceipt = await tx.receipts.update({
+        where: {
+          id: receipt.id,
+        },
+        data: {
+          user_id,
+        },
+        include: {
+          receipt_items: {
+            include: {
+              menu_items: true,
+            },
+          },
+        },
+      });
+
+      // Update user points
+      await tx.users.update({
+        where: {
+          id: user_id,
+        },
+        data: {
+          points: {
+            increment: receipt.points_earned,
+          },
+        },
+      });
+
+      return updatedReceipt;
+    });
+
+    res.json({
+      success: true,
+      data: updatedReceipt,
+    });
+  } catch (error) {
+    console.error('Error claiming receipt:', error);
+    res.status(500).json({ error: 'Failed to claim receipt' });
+  }
+});
+
+// Get all receipts for a specific user
+router.get('/user/:userId', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const receipts = await prisma.receipts.findMany({
+      where: {
+        user_id: userId
+      },
+      include: {
+        receipt_items: {
+          include: {
+            menu_items: true
+          }
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
     });
     res.json(receipts);
   } catch (error) {
-    console.error('Error fetching receipts for user:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch receipts', 
-      details: error instanceof Error ? error.message : 'Unknown error' 
+    console.error('Error fetching user receipts:', error);
+    res.status(500).json({ error: 'Failed to fetch user receipts' });
+  }
+});
+
+// Delete a receipt by code
+router.delete('/code/:code', async (req: Request, res: Response) => {
+  try {
+    const { code } = req.params;
+    const deleted = await prisma.receipts.delete({
+      where: { receipt_code: code }
     });
+    res.json({ success: true, deleted });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete receipt' });
   }
 });
 
