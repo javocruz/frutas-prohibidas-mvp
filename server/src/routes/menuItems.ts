@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
+import { protect, isAdmin } from '../middleware/auth';
 
 const router = Router();
 
@@ -40,8 +41,8 @@ router.get('/category/:category', async (req, res) => {
   }
 });
 
-// Create a new menu item
-router.post('/', async (req, res) => {
+// Create a new menu item (Admin only)
+router.post('/', protect, isAdmin, async (req, res) => {
   try {
     const validatedData = menuItemSchema.parse(req.body);
     const item = await prisma.menu_items.create({
@@ -58,8 +59,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update a menu item
-router.put('/:id', async (req, res) => {
+// Update a menu item (Admin only)
+router.put('/:id', protect, isAdmin, async (req, res) => {
   try {
     const validatedData = menuItemSchema.parse(req.body);
     const item = await prisma.menu_items.update({
@@ -77,8 +78,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete a menu item
-router.delete('/:id', async (req, res) => {
+// Delete a menu item (Admin only)
+router.delete('/:id', protect, isAdmin, async (req, res) => {
   try {
     await prisma.menu_items.delete({
       where: { id: parseInt(req.params.id) },

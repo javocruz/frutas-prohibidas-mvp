@@ -1,27 +1,23 @@
 import { Router } from 'express';
 import { logger } from '../utils/logger';
 import { ApiError } from '../utils/ApiError';
-import { getMetrics } from '../services/dataService';
 import { prisma } from '../lib/prisma';
 import { Request, Response } from 'express';
+import { protect, isAdmin } from '../middleware/auth';
 
 const router = Router();
 
-// Get metrics
-router.get('/', (req: Request, res: Response) => {
-  try {
-    const metrics = getMetrics();
-    res.json({ success: true, data: metrics });
-  } catch (error) {
-    logger.error('Error fetching metrics:', error);
-    res.status(500).json({ error: 'Failed to fetch metrics' });
-  }
-});
+// Get metrics for a specific user (User or Admin)
+router.get('/user/:userId', protect, async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const loggedInUser = req.user;
 
-// Get metrics for a specific user
-router.get('/user/:userId', async (req: Request, res: Response) => {
+  // A user can only access their own metrics, unless they are an admin.
+  if (loggedInUser?.id !== userId && loggedInUser?.user_metadata?.role !== 'admin') {
+    return res.status(403).json({ success: false, error: 'Forbidden' });
+  }
+
   try {
-    const { userId } = req.params;
     const receipts = await prisma.receipts.findMany({
       where: {
         user_id: userId
@@ -68,12 +64,15 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
       take: 5
     });
 
-    const formattedRewards = recentRewards.map(ur => ({
-      id: ur.id,
-      name: ur.rewards.name,
-      description: ur.rewards.description,
-      redeemedAt: ur.redeemed_at
-    }));
+    const formattedRewards = recentRewards.map(ur => {
+      if (!ur.rewards) return null;
+      return {
+        id: ur.id,
+        name: ur.rewards.name,
+        description: ur.rewards.description,
+        redeemedAt: ur.redeemed_at
+      }
+    }).filter(Boolean);
 
     res.json({
       success: true,
@@ -96,8 +95,8 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
   }
 });
 
-// Get restaurant-wide metrics (sum of all receipts)
-router.get('/restaurant', async (req: Request, res: Response) => {
+// Get restaurant-wide metrics (Admin only)
+router.get('/restaurant', protect, isAdmin, async (req: Request, res: Response) => {
   try {
     const receipts = await prisma.receipts.findMany();
     const totalCo2Saved = receipts.reduce((sum, receipt) => sum + Number(receipt.total_co2_saved || 0), 0);
@@ -116,8 +115,8 @@ router.get('/restaurant', async (req: Request, res: Response) => {
   }
 });
 
-// Admin Analytics Endpoint
-router.get('/admin-analytics', async (req: Request, res: Response) => {
+// Admin Analytics Endpoint (Admin only)
+router.get('/admin-analytics', protect, isAdmin, async (req: Request, res: Response) => {
   try {
     // 1. KPI Cards
     const [receipts, users, menuItems] = await Promise.all([
@@ -149,10 +148,12 @@ router.get('/admin-analytics', async (req: Request, res: Response) => {
     }
 
     // 3. Top 10 and Least 10 Menu Items
-    const itemSales: Record<number, number> = {};
+    const itemSales: Record<string, number> = {};
     receipts.forEach(r => {
       r.receipt_items?.forEach(item => {
-        itemSales[item.menu_item_id] = (itemSales[item.menu_item_id] || 0) + item.quantity;
+        if (item.menu_item_id) {
+          itemSales[item.menu_item_id] = (itemSales[item.menu_item_id] || 0) + item.quantity;
+        }
       });
     });
     const sortedItems = Object.entries(itemSales)
@@ -195,9 +196,9 @@ router.get('/admin-analytics', async (req: Request, res: Response) => {
       const monthEnd = monthsAgo(i - 1);
       const monthLabel = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
       const uniqueUsers = new Set(
-        receipts.filter(r => new Date(r.created_at) >= monthStart && new Date(r.created_at) < monthEnd)
+        receipts
+          .filter(r => r.user_id && new Date(r.created_at) >= monthStart && new Date(r.created_at) < monthEnd)
           .map(r => r.user_id)
-          .filter(Boolean)
       );
       engagement.push({ month: monthLabel, users: uniqueUsers.size });
     }

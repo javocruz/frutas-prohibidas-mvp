@@ -1,11 +1,11 @@
 import express from 'express';
 import { logger } from '../utils/logger';
 import { ApiError } from '../utils/ApiError';
-import { getAllReceipts } from '../services/dataService';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { generateReceiptCode } from '../utils/receiptCode';
 import { Request, Response } from 'express';
+import { protect, isAdmin } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -34,8 +34,8 @@ const calculatePoints = (co2Saved: number, waterSaved: number, landSaved: number
   );
 };
 
-// Create a new receipt
-router.post('/finalize', async (req: Request, res: Response) => {
+// Create a new receipt (Admin only)
+router.post('/finalize', protect, isAdmin, async (req: Request, res: Response) => {
   try {
     // Validate request body
     const validationResult = createReceiptSchema.safeParse(req.body);
@@ -117,7 +117,7 @@ router.post('/finalize', async (req: Request, res: Response) => {
           total_land_saved: Number(totals.land),
           points_earned,
           created_at: new Date(),
-          user_id: req.body.user_id || undefined,
+          // user_id is null until claimed
           receipt_items: {
             create: items.map(item => ({
               menu_item_id: item.menu_item_id,
@@ -133,13 +133,8 @@ router.post('/finalize', async (req: Request, res: Response) => {
           },
         },
       });
-      // If user_id is present, increment user points
-      if (req.body.user_id) {
-        await tx.users.update({
-          where: { id: req.body.user_id },
-          data: { points: { increment: points_earned } },
-        });
-      }
+      // This endpoint now only creates unclaimed receipts.
+      // Points are awarded upon claiming.
       return newReceipt;
     });
 
@@ -166,8 +161,8 @@ router.post('/finalize', async (req: Request, res: Response) => {
   }
 });
 
-// Get all receipts
-router.get('/', async (req: Request, res: Response) => {
+// Get all receipts (Admin only)
+router.get('/', protect, isAdmin, async (req: Request, res: Response) => {
   try {
     const receipts = await prisma.receipts.findMany({
       include: {
@@ -188,11 +183,11 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// Get a receipt by ID
-router.get('/:id', async (req: Request, res: Response) => {
+// Get a receipt by ID (Owner or Admin)
+router.get('/:id', protect, async (req: Request, res: Response) => {
   try {
     const receipt = await prisma.receipts.findUnique({
-      where: { id: parseInt(req.params.id) },
+      where: { id: req.params.id },
       include: {
         receipt_items: {
           include: {
@@ -206,6 +201,11 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Receipt not found' });
     }
 
+    // Check if the logged-in user is the owner or an admin
+    if (receipt.user_id !== req.user?.id && req.user?.user_metadata?.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     res.json(receipt);
   } catch (error) {
     logger.error('Error fetching receipt:', error);
@@ -213,27 +213,25 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Claim a receipt by code
-router.post('/claim', async (req: Request, res: Response) => {
+// Claim a receipt by code (Authenticated users)
+router.post('/claim', protect, async (req: Request, res: Response) => {
+  const { receipt_code } = req.body;
+  const user = req.user; // Securely get user from 'protect' middleware
+
+  if (!receipt_code) {
+    return res.status(400).json({ error: 'Receipt code is required' });
+  }
+
+  if (!user) {
+    return res.status(401).json({ error: 'You must be logged in to claim a receipt' });
+  }
+
   try {
-    const { receipt_code, user_id } = req.body;
-
-    if (!receipt_code || !user_id) {
-      return res.status(400).json({ error: 'Receipt code and user ID are required' });
-    }
-
-    // Find the receipt by code
+    // Find the unclaimed receipt by code
     const receipt = await prisma.receipts.findFirst({
       where: {
         receipt_code,
         user_id: null, // Only unclaimed receipts
-      },
-      include: {
-        receipt_items: {
-          include: {
-            menu_items: true,
-          },
-        },
       },
     });
 
@@ -241,23 +239,25 @@ router.post('/claim', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Receipt not found or already claimed' });
     }
 
-    // Update the receipt to assign it to the user
-    const updatedReceipt = await prisma.receipts.update({
-      where: { id: receipt.id },
-      data: { user_id },
-    });
-    // Increment user points by receipt.points_earned
-    await prisma.users.update({
-      where: { id: user_id },
-      data: { points: { increment: receipt.points_earned } },
-    });
+    // Use a transaction to ensure atomicity
+    const [, updatedUser] = await prisma.$transaction([
+      prisma.receipts.update({
+        where: { id: receipt.id },
+        data: { user_id: user.id },
+      }),
+      prisma.users.update({
+        where: { id: user.id },
+        data: { points: { increment: receipt.points_earned } },
+      }),
+    ]);
 
     res.json({
       success: true,
-      data: updatedReceipt,
+      message: `Receipt claimed successfully! ${receipt.points_earned} points have been added to your account.`,
+      newPoints: updatedUser.points,
     });
   } catch (error) {
-    console.error('Error claiming receipt:', error);
+    logger.error(`Error claiming receipt for user ${user.id}:`, error);
     res.status(500).json({ error: 'Failed to claim receipt' });
   }
 });
@@ -288,15 +288,14 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
   }
 });
 
-// Delete a receipt by code
-router.delete('/code/:code', async (req: Request, res: Response) => {
+// Delete a receipt (Admin only)
+router.delete('/:id', protect, isAdmin, async (req: Request, res: Response) => {
   try {
-    const { code } = req.params;
-    const deleted = await prisma.receipts.delete({
-      where: { receipt_code: code }
-    });
-    res.json({ success: true, deleted });
+    const { id } = req.params;
+    await prisma.receipts.delete({ where: { id: id } });
+    res.status(204).send();
   } catch (error) {
+    logger.error('Error deleting receipt:', error);
     res.status(500).json({ error: 'Failed to delete receipt' });
   }
 });
