@@ -12,6 +12,7 @@ import Receipts from './pages/Receipts';
 import ReceiptsMaker from './pages/ReceiptsMaker';
 import Admin from './pages/Admin';
 import Profile from './pages/Profile';
+import UserManagement from './pages/UserManagement';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -96,6 +97,14 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute requireAdmin>
               <ReceiptsMaker />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="admin/user-management"
+          element={
+            <ProtectedRoute requireAdmin>
+              <UserManagement />
             </ProtectedRoute>
           }
         />

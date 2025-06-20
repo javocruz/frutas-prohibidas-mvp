@@ -6,6 +6,7 @@ export const ROUTES = {
   REWARDS: '/rewards',
   ADMIN: '/admin',
   RECEIPTS_MAKER: '/receipts-maker',
+  USER_MANAGEMENT: '/admin/user-management',
 } as const;
 
 export type Route = (typeof ROUTES)[keyof typeof ROUTES];

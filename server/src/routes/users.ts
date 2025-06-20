@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { logger } from '../utils/logger';
 import { ApiError } from '../utils/ApiError';
 import { prisma } from '../lib/prisma';
+import { protect, isAdmin } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -22,14 +23,26 @@ const changePasswordSchema = z.object({
   newPassword: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
-// Get all users
-router.get('/', (req, res) => {
+// Get all users (Admin only)
+router.get('/', protect, isAdmin, async (req, res, next) => {
   try {
-    const users = getAllUsers();
+    const users = await prisma.users.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        points: true,
+        created_at: true,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
     res.json({ success: true, data: users });
   } catch (error) {
     logger.error('Error fetching users:', error);
-    throw new ApiError('Failed to fetch users', 500, 'FETCH_USERS_ERROR');
+    next(new ApiError('Failed to fetch users', 500, 'FETCH_USERS_ERROR'));
   }
 });
 

@@ -2,6 +2,18 @@ import { User } from '../types';
 import { api } from '../lib/api';
 import { supabase } from '../lib/supabase';
 
+export const getAllUsers = async (): Promise<User[]> => {
+  try {
+    const response = await api.get('/users');
+    return response.data.data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to fetch users');
+  }
+};
+
 export const updateUserProfile = async (userId: string, data: { name: string; email: string }): Promise<{ user: User; message: string }> => {
   try {
     // First, update the email in Supabase Auth if it has changed

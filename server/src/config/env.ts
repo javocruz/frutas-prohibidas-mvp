@@ -5,6 +5,8 @@ const envSchema = z.object({
   PORT: z.string().default('3000'),
   CLIENT_URL: z.string().default('http://localhost:5173'),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly']).default('info'),
+  SUPABASE_URL: z.string().url(),
+  SUPABASE_SERVICE_KEY: z.string().min(1),
 });
 
 const env = envSchema.parse(process.env);
