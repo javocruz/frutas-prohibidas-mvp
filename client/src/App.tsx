@@ -5,6 +5,7 @@ import { UserProvider } from './providers/UserProvider';
 import { ThemeProvider } from './providers/ThemeProvider';
 import { useAuthContext } from './providers/AuthProvider';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Rewards from './pages/Rewards';
 import Receipts from './pages/Receipts';
@@ -54,6 +55,16 @@ const AppRoutes: React.FC = () => {
             <Navigate to="/dashboard" replace />
           ) : (
             <Login />
+          )
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          user ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Register />
           )
         }
       />

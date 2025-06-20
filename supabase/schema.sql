@@ -142,4 +142,50 @@ CREATE TRIGGER update_receipts_updated_at
 CREATE TRIGGER update_rewards_updated_at
     BEFORE UPDATE ON rewards
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column(); 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Create a table for public profiles
+CREATE TABLE public.users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    name TEXT,
+    email TEXT UNIQUE NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('user', 'admin')),
+    points INTEGER NOT NULL DEFAULT 0
+);
+
+-- This trigger automatically creates a profile for new users.
+-- See https://supabase.com/docs/guides/auth/managing-user-data#using-triggers for more details.
+drop function if exists public.handle_new_user cascade;
+create function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.users (id, email, name, role, points)
+  values (new.id, new.email, new.raw_user_meta_data->>'name', 'user', 0);
+  return new;
+end;
+$$;
+
+-- trigger the function every time a user is created
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- Set up Row Level Security (RLS)
+-- See https://supabase.com/docs/guides/auth/row-level-security for more details.
+alter table public.users enable row level security;
+drop policy if exists "Public profiles are viewable by everyone." on public.users;
+create policy "Public profiles are viewable by everyone." on public.users
+  for select using (true);
+
+drop policy if exists "Users can insert their own profile." on public.users;
+create policy "Users can insert their own profile." on public.users
+  for insert with check (auth.uid() = id);
+
+drop policy if exists "Users can update own profile." on public.users;
+create policy "Users can update own profile." on public.users
+  for update using (auth.uid() = id); 

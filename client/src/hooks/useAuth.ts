@@ -149,7 +149,9 @@ export const useAuth = () => {
   }, [updateState]);
 
   const register = useCallback(async (email: string, password: string, name: string) => {
-    if (isUpdating.current) return;
+    if (isUpdating.current) {
+      throw new Error('Another authentication operation is in progress. Please try again.');
+    }
     isUpdating.current = true;
     updateState({ loading: true, error: null });
     
@@ -159,21 +161,12 @@ export const useAuth = () => {
         password,
         options: { data: { name } },
       });
-      if (error || !data.user) {
-        throw new Error(error?.message || 'Registration failed');
+
+      if (error) {
+        throw error;
       }
-      const { error: insertError } = await supabase.from('users').insert({
-        id: data.user.id,
-        email,
-        name,
-        role: 'user',
-        points: 0,
-      });
-      if (insertError) throw new Error(insertError.message);
-      const profile = await fetchUserProfile(data.user.id);
-      if (!profile) throw new Error('User profile not found');
-      updateState({ user: profile, loading: false, error: null });
-      return profile;
+
+      return data.user;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Registration failed';
       updateState({ loading: false, error: message });
@@ -181,6 +174,7 @@ export const useAuth = () => {
     } finally {
       if (mounted.current) {
         isUpdating.current = false;
+        updateState({ loading: false });
       }
     }
   }, [updateState]);

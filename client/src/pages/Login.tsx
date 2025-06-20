@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthContext } from '../providers/AuthProvider';
+import { ROUTES } from '../config/routes';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -146,6 +147,11 @@ const Login: React.FC = () => {
             </button>
           </div>
         </form>
+        <div className="text-sm text-center">
+          <Link to={ROUTES.REGISTER} className="font-medium text-brand hover:text-brand-dark">
+            Don't have an account? Sign up
+          </Link>
+        </div>
       </div>
     </div>
   );
