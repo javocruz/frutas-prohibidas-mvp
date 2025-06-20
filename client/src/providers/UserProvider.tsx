@@ -87,8 +87,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     if (user) {
-      Promise.all([loadMetrics(), loadReceipts(), loadRewards()]);
+      // Load all user data in parallel
+      Promise.all([
+        loadMetrics(),
+        loadReceipts(),
+        loadRewards()
+      ]).catch(error => {
+        setState(prev => ({
+          ...prev,
+          error: error instanceof Error ? error.message : 'Failed to load user data'
+        }));
+      });
     } else {
+      // Clear state when user is null
       setState({
         metrics: null,
         receipts: [],

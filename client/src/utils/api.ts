@@ -10,6 +10,18 @@ const api = axios.create({
   },
 });
 
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+const subscribeTokenRefresh = (cb: (token: string) => void) => {
+  refreshSubscribers.push(cb);
+};
+
+const onRefreshComplete = (token: string) => {
+  refreshSubscribers.forEach(cb => cb(token));
+  refreshSubscribers = [];
+};
+
 // Request interceptor
 api.interceptors.request.use(
   config => {
@@ -35,6 +47,18 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
+        // If we're already refreshing, wait for it to complete
+        if (isRefreshing) {
+          return new Promise(resolve => {
+            subscribeTokenRefresh(token => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(api(originalRequest));
+            });
+          });
+        }
+
+        isRefreshing = true;
+
         // Try to refresh the token
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
@@ -51,6 +75,10 @@ api.interceptors.response.use(
 
         // Update the original request with the new token
         originalRequest.headers.Authorization = `Bearer ${token}`;
+        
+        // Notify all waiting requests
+        onRefreshComplete(token);
+        
         return api(originalRequest);
       } catch (refreshError) {
         // If refresh fails, clear tokens and redirect to login
@@ -58,6 +86,8 @@ api.interceptors.response.use(
         localStorage.removeItem('refreshToken');
         window.location.href = '/login';
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 

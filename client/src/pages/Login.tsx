@@ -4,7 +4,7 @@ import { useAuthContext } from '../providers/AuthProvider';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuthContext();
+  const { login, busy, error: authError } = useAuthContext();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,16 +24,21 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
     try {
-      await login(formData.email, formData.password);
-      navigate('/dashboard');
+      const user = await login(formData.email, formData.password);
+      if (user) {
+        navigate('/dashboard');
+      } else {
+        setError('Login failed: No user returned');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to login');
     } finally {
       setLoading(false);
     }
   };
+
+  const currentError = error || authError;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -79,11 +84,11 @@ const Login: React.FC = () => {
             </div>
           </div>
 
-          {error && (
+          {currentError && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="flex">
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                  <h3 className="text-sm font-medium text-red-800">{currentError || 'Login failed. Please check your credentials or contact support.'}</h3>
                 </div>
               </div>
             </div>
@@ -92,12 +97,12 @@ const Login: React.FC = () => {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={busy}
               className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                loading ? 'bg-brand/70' : 'bg-brand hover:bg-brand-dark'
+                busy ? 'bg-brand/70' : 'bg-brand hover:bg-brand-dark'
               } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand`}
             >
-              {loading ? (
+              {busy ? (
                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                   <svg
                     className="animate-spin h-5 w-5 text-white"
@@ -137,7 +142,7 @@ const Login: React.FC = () => {
                   </svg>
                 </span>
               )}
-              {loading ? 'Signing in...' : 'Sign in'}
+              {busy ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>

@@ -154,66 +154,75 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({
       </style>
     </head>
     <body>
-      <div class="receipt">
-        <header class="receipt-header">
-          <h1>CUENTA DE LA SOSTENIBILIDAD<br><span class="subtitle">SUSTAINABILITY BILL</span></h1>
-        </header>
-
-        <div class="date">
-          ${date}
+      <div style={{ width: '80mm', fontFamily: 'monospace', color: '#000', background: '#fff', padding: '12px' }}>
+        {/* Sustainability Message */}
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <div style={{ fontWeight: 'bold', fontSize: '1.1em', marginBottom: '4px' }}>CUENTA DE LA SOSTENIBILIDAD</div>
+          <div style={{ fontWeight: 'bold', fontSize: '1.1em', marginBottom: '8px' }}>SUSTAINABILITY BILL</div>
+          <div style={{ fontSize: '0.95em', marginBottom: '2px' }}>
+            Esta otra cuenta no la pagas tú. Al revés, es lo que le has ahorrado al planeta en términos de CO2, Agua y Tierra, al elegir nuestros platos respecto a los mismos hechos de origen animal.
+          </div>
+          <div style={{ fontSize: '0.95em' }}>
+            You don't pay this other bill. On the contrary, it represents what you've saved the planet in terms of CO2, Water and Land by choosing our dishes instead of those made from animal products.
+          </div>
         </div>
+        {/* Main Receipt Content */}
+        <div class="receipt">
+          <header class="receipt-header">
+            <h1>CUENTA DE LA SOSTENIBILIDAD<br><span class="subtitle">SUSTAINABILITY BILL</span></h1>
+          </header>
 
-        <table class="items">
-          <thead>
-            <tr>
-              <th>UND</th>
-              <th>PRODUCTO</th>
-              <th>CO₂ (kg)</th>
-              <th>H₂O (L)</th>
-              <th>TIERRA (m²)</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemTotals.map(item => `
-              <tr class="item-row">
-                <td>${item.quantity}</td>
-                <td>${item.menuItem.name}</td>
-                <td>${item.menuItem.co2_saved}</td>
-                <td>${item.menuItem.water_saved}</td>
-                <td>${item.menuItem.land_saved}</td>
-              </tr>
+          <div class="date">
+            ${date}
+          </div>
+
+          <table class="items">
+            <thead>
               <tr>
-                <td colspan="5" class="item-total">
-                  Total: CO₂ ${item.totalCo2.toFixed(2)}kg | H₂O ${item.totalWater.toFixed(0)}L | Tierra ${item.totalLand.toFixed(2)}m²
-                </td>
+                <th>UND</th>
+                <th>PRODUCTO</th>
+                <th>CO₂ (kg)</th>
+                <th>H₂O (L)</th>
+                <th>TIERRA (m²)</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${itemTotals.map(item => `
+                <tr class="item-row">
+                  <td>${item.quantity}</td>
+                  <td>${item.menuItem.name}</td>
+                  <td>${item.menuItem.co2_saved}</td>
+                  <td>${item.menuItem.water_saved}</td>
+                  <td>${item.menuItem.land_saved}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
 
-        <div class="totals">
-          <p class="totals-label">TOTAL DE AHORRO / TOTAL SAVING</p>
-          <p class="totals-values">
-            <span>${totals.co2.toFixed(2)} kg</span>
-            <span>${totals.water.toFixed(0)} L</span>
-            <span>${totals.land.toFixed(2)} m²</span>
-          </p>
+          <div class="totals">
+            <p class="totals-label">TOTAL DE AHORRO / TOTAL SAVING</p>
+            <p class="totals-values">
+              <span>${totals.co2.toFixed(2)} kg</span>
+              <span>${totals.water.toFixed(0)} L</span>
+              <span>${totals.land.toFixed(2)} m²</span>
+            </p>
+          </div>
+
+          <div class="points">
+            Puntos a ganar / Points to earn: ${pointsEarned}
+          </div>
+
+          <div class="divider"></div>
+
+          <footer class="receipt-footer">
+            <p>Register and enter this code in the Frutas Prohibidas web app to track lifetime eco-savings and earn rewards:</p>
+            <p class="receipt-code">${receiptCode}</p>
+            <p>Gracias por elegir comer de manera consciente en FRUTAS PROHIBIDAS</p>
+            <p>Thank you for choosing to eat consciously at FRUTAS PROHIBIDAS</p>
+            <p class="website">www.frutasprohibidas.com/sostenibilidad</p>
+            <p class="thank-you">Your choice makes a difference!</p>
+          </footer>
         </div>
-
-        <div class="points">
-          Puntos a ganar / Points to earn: ${pointsEarned}
-        </div>
-
-        <div class="divider"></div>
-
-        <footer class="receipt-footer">
-          <p>Register and enter this code in the Frutas Prohibidas web app to track lifetime eco-savings and earn rewards:</p>
-          <p class="receipt-code">${receiptCode}</p>
-          <p>Gracias por elegir comer de manera consciente en FRUTAS PROHIBIDAS</p>
-          <p>Thank you for choosing to eat consciously at FRUTAS PROHIBIDAS</p>
-          <p class="website">www.frutasprohibidas.com/sostenibilidad</p>
-          <p class="thank-you">Your choice makes a difference!</p>
-        </footer>
       </div>
     </body>
     </html>
