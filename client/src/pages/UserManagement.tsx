@@ -3,7 +3,7 @@ import { User } from '../types';
 import { getAllUsers } from '../services/userService';
 import { Table } from '../components/Table';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { ErrorMessage } from '../components/ErrorMessage';
+import ErrorMessage from '../components/ErrorMessage';
 import { format } from 'date-fns';
 
 const UserManagement = () => {
