@@ -112,8 +112,10 @@ export interface ApiError {
 }
 
 export interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<User>;
-  logout: () => void;
-  register: (email: string, password: string, name: string) => Promise<User>;
+  login: (email: string, password: string) => Promise<User | null>;
+  logout: () => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<User | null>;
   checkAuth: () => Promise<User | null>;
+  isInitializing: boolean;
+  busy: boolean;
 }

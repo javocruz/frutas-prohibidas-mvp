@@ -18,32 +18,31 @@ export const useUser = () => {
   });
 
   const fetchUserData = useCallback(async () => {
-    if (!user) return;
-    try {
-      setState(prev => ({ ...prev, loading: true }));
-      const metrics = await metricsService.getUserMetrics(user.id);
-      setState(prev => ({ ...prev, metrics }));
-      // Fetch receipts and rewards here if needed
-      // For example:
-      // const receipts = await receiptsService.getUserReceipts(user.id);
-      // const rewards = await rewardsService.getUserRewards(user.id);
-      // setState(prev => ({ ...prev, receipts, rewards }));
-    } catch (error) {
+    if (!user) {
       setState({
         metrics: null,
         loading: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch user data',
+        error: null,
       });
-    } finally {
-      setState(prev => ({ ...prev, loading: false }));
+      return;
+    }
+
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      const metrics = await metricsService.getUserMetrics(user.id);
+      setState(prev => ({ ...prev, metrics, loading: false }));
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch user data',
+      }));
     }
   }, [user]);
 
   useEffect(() => {
-    if (user) {
-      fetchUserData();
-    }
-  }, [user, fetchUserData]);
+    fetchUserData();
+  }, [fetchUserData]);
 
   return {
     ...state,

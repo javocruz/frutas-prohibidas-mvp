@@ -4,16 +4,18 @@ import { useAuthContext } from '../providers/AuthProvider';
 import { ROUTES } from '../config/routes';
 import { navigation } from '../config/navigation';
 import symbolLogo from '../assets/symbol-logo.png';
+import Modal from './Modal';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user } = useAuthContext();
+  const { user, logout, busy } = useAuthContext();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLogoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -22,6 +24,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
     </svg>
   );
+
+  const handleLogout = async () => {
+    setLogoutModalOpen(true);
+  };
+
+  const confirmLogout = async () => {
+    await logout();
+  };
 
   if (!user) {
     return null;
@@ -140,6 +150,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               )}
             </div>
           </div>
+          {/* Logout Button */}
+          <div className="p-4 border-t">
+            <button
+              onClick={handleLogout}
+              disabled={busy}
+              className={`w-full px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 mt-2 ${
+                busy ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              Log Out
+            </button>
+          </div>
         </div>
       </div>
 
@@ -174,6 +196,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Page Content */}
         <main className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
+      <Modal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirm={confirmLogout}
+        title="Confirm Logout"
+        confirmText="Log Out"
+      >
+        Are you sure you want to log out of your account?
+      </Modal>
     </div>
   );
 };

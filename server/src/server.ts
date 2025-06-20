@@ -32,12 +32,23 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting
-const limiter = rateLimit({
+// More flexible rate limiting
+const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: (req) => {
+    // For local development, allow a much higher limit to avoid issues with hot-reloading
+    if (req.ip === '::1' || req.ip === '127.0.0.1' || req.ip.startsWith('::ffff:127.0.0.1')) {
+      return 1000;
+    }
+    // For production, keep a reasonable limit
+    return 100;
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: 'Too many requests from this IP, please try again after 15 minutes',
 });
-app.use(limiter);
+
+app.use('/api', apiLimiter);
 
 // Body parsing
 app.use(express.json());

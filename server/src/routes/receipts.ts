@@ -117,6 +117,7 @@ router.post('/finalize', async (req: Request, res: Response) => {
           total_land_saved: Number(totals.land),
           points_earned,
           created_at: new Date(),
+          user_id: req.body.user_id || undefined,
           receipt_items: {
             create: items.map(item => ({
               menu_item_id: item.menu_item_id,
@@ -132,7 +133,13 @@ router.post('/finalize', async (req: Request, res: Response) => {
           },
         },
       });
-
+      // If user_id is present, increment user points
+      if (req.body.user_id) {
+        await tx.users.update({
+          where: { id: req.body.user_id },
+          data: { points: { increment: points_earned } },
+        });
+      }
       return newReceipt;
     });
 
@@ -234,38 +241,15 @@ router.post('/claim', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Receipt not found or already claimed' });
     }
 
-    // Update the receipt with the user ID and update user points
-    const updatedReceipt = await prisma.$transaction(async (tx) => {
-      // Update the receipt
-      const updatedReceipt = await tx.receipts.update({
-        where: {
-          id: receipt.id,
-        },
-        data: {
-          user_id,
-        },
-        include: {
-          receipt_items: {
-            include: {
-              menu_items: true,
-            },
-          },
-        },
-      });
-
-      // Update user points
-      await tx.users.update({
-        where: {
-          id: user_id,
-        },
-        data: {
-          points: {
-            increment: receipt.points_earned,
-          },
-        },
-      });
-
-      return updatedReceipt;
+    // Update the receipt to assign it to the user
+    const updatedReceipt = await prisma.receipts.update({
+      where: { id: receipt.id },
+      data: { user_id },
+    });
+    // Increment user points by receipt.points_earned
+    await prisma.users.update({
+      where: { id: user_id },
+      data: { points: { increment: receipt.points_earned } },
     });
 
     res.json({
